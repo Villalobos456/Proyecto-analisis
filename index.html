@@ -1,0 +1,2039 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GymPower — Análisis y Diseño de Sistemas</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   TOKENS
+============================================================ */
+:root {
+  --blue:    #29B6F6;
+  --mint:    #26C6A3;
+  --yellow:  #F59E0B;
+  --red:     #EF5350;
+  --gmain:   linear-gradient(135deg,#29B6F6,#26C6A3);
+  --galt:    linear-gradient(135deg,#F59E0B,#EF5350);
+  --radius:  8px;
+  --radius-lg: 14px;
+  --shsm:    0 4px 16px rgba(0,0,0,.18);
+  --shlg:    0 8px 40px rgba(0,0,0,.32);
+}
+[data-theme="dark"] {
+  --bg:   #0D1117; --bg-2: #161B22; --bg-3: #1C2330; --bg-4: #21272E;
+  --tx:   #E6EDF3; --mt:   #8B949E; --mt-2: #6A7380;
+  --brd:  #30363D; --brd-2:#21262D;
+  --clight:#29B6F6;
+}
+[data-theme="light"] {
+  --bg:   #F6F8FA; --bg-2: #FFFFFF; --bg-3: #EEF2F7; --bg-4: #E2E8F0;
+  --tx:   #1A202C; --mt:   #6B7280; --mt-2: #9CA3AF;
+  --brd:  #D1D9E0; --brd-2:#E2E8EF;
+  --clight:#0EA5E9;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  font-family:'Inter',sans-serif;
+  background:var(--bg);
+  color:var(--tx);
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  transition:background .3s,color .3s;
+}
+
+/* ============================================================
+   NAVBAR
+============================================================ */
+.navbar {
+  position:sticky; top:0; z-index:1000;
+  background:var(--bg-2);
+  border-bottom:1px solid var(--brd);
+  box-shadow:0 2px 12px rgba(0,0,0,.15);
+}
+.nav-inner {
+  max-width:1300px; margin:0 auto;
+  display:flex; align-items:center; gap:0;
+  padding:0 24px; height:64px;
+}
+.nav-logo {
+  display:flex; align-items:center; gap:12px;
+  text-decoration:none; flex-shrink:0; margin-right:32px;
+}
+.nav-logo-mark {
+  width:38px; height:38px; border-radius:10px;
+  background:var(--gmain);
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Bebas Neue',sans-serif; font-size:20px; color:#fff; letter-spacing:1px;
+}
+.nav-logo-text {
+  font-family:'Bebas Neue',sans-serif; font-size:22px;
+  letter-spacing:3px; color:var(--tx);
+}
+.nav-logo-sub {
+  font-family:'Rajdhani',sans-serif; font-size:10px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--mt);
+  margin-top:-2px;
+}
+
+.nav-links {
+  display:flex; align-items:center; gap:2px; flex:1;
+}
+.nav-link {
+  display:flex; align-items:center; gap:7px;
+  padding:8px 14px; border-radius:var(--radius);
+  font-family:'Rajdhani',sans-serif; font-size:13px; font-weight:700;
+  letter-spacing:.5px; text-transform:uppercase;
+  color:var(--mt); cursor:pointer; transition:all .2s;
+  border:none; background:none; white-space:nowrap;
+  text-decoration:none;
+}
+.nav-link:hover { color:var(--tx); background:var(--bg-3); }
+.nav-link.active { color:var(--clight); background:rgba(41,182,246,.10); }
+.nav-link svg { stroke:currentColor; flex-shrink:0; }
+
+.nav-actions { display:flex; align-items:center; gap:10px; margin-left:auto; }
+
+/* GymPower button */
+.btn-gympower {
+  display:flex; align-items:center; gap:8px;
+  padding:9px 18px; border-radius:20px;
+  background:var(--gmain);
+  color:#fff; font-family:'Rajdhani',sans-serif;
+  font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase;
+  text-decoration:none; transition:all .25s; white-space:nowrap;
+  box-shadow:0 2px 12px rgba(41,182,246,.30);
+}
+.btn-gympower:hover { opacity:.9; transform:translateY(-1px); box-shadow:0 4px 20px rgba(41,182,246,.40); }
+.btn-gympower svg { stroke:#fff; flex-shrink:0; }
+
+/* Theme toggle */
+.theme-btn {
+  width:36px; height:36px; border-radius:8px;
+  background:var(--bg-3); border:1px solid var(--brd);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; transition:all .2s; color:var(--mt);
+  flex-shrink:0;
+}
+.theme-btn:hover { color:var(--clight); border-color:var(--clight); }
+.theme-btn svg { stroke:currentColor; }
+
+/* Hamburger */
+.ham-btn {
+  display:none; width:36px; height:36px; border-radius:8px;
+  background:var(--bg-3); border:1px solid var(--brd);
+  align-items:center; justify-content:center;
+  cursor:pointer; color:var(--mt); flex-shrink:0;
+}
+.ham-btn svg { stroke:currentColor; }
+
+/* Mobile nav */
+.mobile-nav {
+  display:none; flex-direction:column; gap:4px;
+  padding:12px 16px 16px;
+  background:var(--bg-2); border-bottom:1px solid var(--brd);
+}
+.mobile-nav.open { display:flex; }
+.mobile-nav .nav-link { width:100%; justify-content:flex-start; }
+
+/* ============================================================
+   MAIN CONTENT AREA
+============================================================ */
+main { flex:1; }
+
+/* Pages */
+.page { display:none; }
+.page.active { display:block; }
+
+/* ============================================================
+   HERO (INICIO)
+============================================================ */
+.hero {
+  min-height:calc(100vh - 64px - 72px);
+  display:flex; align-items:center; justify-content:center;
+  padding:60px 24px;
+  background:
+    radial-gradient(ellipse 900px 500px at 60% 40%,rgba(41,182,246,.06) 0%,transparent 70%),
+    radial-gradient(ellipse 600px 400px at 20% 70%,rgba(38,198,163,.04) 0%,transparent 60%),
+    var(--bg);
+  text-align:center;
+}
+.hero-inner { max-width:820px; }
+.hero-badge {
+  display:inline-flex; align-items:center; gap:8px;
+  padding:6px 16px; border-radius:20px;
+  border:1px solid rgba(41,182,246,.30);
+  background:rgba(41,182,246,.07);
+  font-family:'Rajdhani',sans-serif; font-size:11px; font-weight:700;
+  letter-spacing:2px; text-transform:uppercase; color:var(--clight);
+  margin-bottom:28px;
+}
+.hero-badge-dot {
+  width:7px; height:7px; border-radius:50%;
+  background:var(--clight); animation:pulse 2s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
+
+.hero-title {
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(52px,8vw,96px);
+  letter-spacing:6px; line-height:.95;
+  color:var(--tx); margin-bottom:12px;
+}
+.hero-title span {
+  background:var(--gmain); -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent; background-clip:text;
+}
+.hero-subtitle {
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(16px,2.5vw,26px);
+  letter-spacing:4px; color:var(--mt); margin-bottom:28px;
+}
+.hero-desc {
+  font-size:15px; color:var(--mt); line-height:1.8;
+  max-width:640px; margin:0 auto 40px;
+}
+.hero-stats {
+  display:flex; justify-content:center; gap:40px; flex-wrap:wrap;
+  margin-bottom:48px;
+}
+.hero-stat {
+  text-align:center;
+}
+.hero-stat-num {
+  font-family:'Bebas Neue',sans-serif; font-size:36px; letter-spacing:2px;
+  background:var(--gmain); -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent; background-clip:text;
+}
+.hero-stat-lbl {
+  font-family:'Rajdhani',sans-serif; font-size:11px; font-weight:700;
+  letter-spacing:2px; text-transform:uppercase; color:var(--mt);
+}
+.hero-team {
+  display:flex; justify-content:center; flex-wrap:wrap; gap:10px; margin-top:36px;
+}
+.hero-member {
+  padding:8px 18px; border-radius:8px;
+  border:1px solid var(--brd); background:var(--bg-2);
+  font-family:'Rajdhani',sans-serif; font-weight:600; font-size:13px; color:var(--tx);
+}
+.hero-cta {
+  display:flex; justify-content:center; gap:14px; flex-wrap:wrap; margin-top:36px;
+}
+.btn-primary {
+  display:inline-flex; align-items:center; gap:8px;
+  padding:13px 28px; border-radius:var(--radius);
+  background:var(--gmain); color:#fff;
+  font-family:'Rajdhani',sans-serif; font-size:13px; font-weight:700;
+  letter-spacing:1px; text-transform:uppercase;
+  border:none; cursor:pointer; transition:all .25s;
+  box-shadow:0 2px 16px rgba(41,182,246,.25);
+}
+.btn-primary:hover { opacity:.9; transform:translateY(-2px); }
+.btn-outline {
+  display:inline-flex; align-items:center; gap:8px;
+  padding:13px 28px; border-radius:var(--radius);
+  border:1.5px solid var(--brd); background:transparent; color:var(--tx);
+  font-family:'Rajdhani',sans-serif; font-size:13px; font-weight:700;
+  letter-spacing:1px; text-transform:uppercase;
+  cursor:pointer; transition:all .25s;
+}
+.btn-outline:hover { border-color:var(--clight); color:var(--clight); }
+
+/* ============================================================
+   PAGE SHELL (para todas las páginas internas)
+============================================================ */
+.page-shell { max-width:1100px; margin:0 auto; padding:48px 28px 64px; }
+.page-header { margin-bottom:40px; }
+.page-eyebrow {
+  font-family:'Rajdhani',sans-serif; font-size:11px; font-weight:700;
+  letter-spacing:3px; text-transform:uppercase; color:var(--clight);
+  margin-bottom:8px;
+}
+.page-title {
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(32px,5vw,56px); letter-spacing:4px; color:var(--tx); line-height:1;
+  margin-bottom:10px;
+}
+.page-title span {
+  background:var(--gmain); -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent; background-clip:text;
+}
+.page-desc { font-size:14px; color:var(--mt); line-height:1.7; max-width:700px; }
+
+/* ============================================================
+   CONTENT COMPONENTS (shared)
+============================================================ */
+.section-divider {
+  border:none; height:1px; background:var(--brd); margin:36px 0;
+}
+
+.proy-h2 {
+  font-family:'Bebas Neue',sans-serif; font-size:26px; letter-spacing:2px;
+  color:var(--tx); margin-bottom:14px; margin-top:36px; padding-bottom:8px;
+  border-bottom:2px solid var(--brd); position:relative;
+}
+.proy-h2::after {
+  content:''; position:absolute; bottom:-2px; left:0; width:60px; height:2px;
+  background:var(--gmain); border-radius:2px;
+}
+.proy-h2:first-child { margin-top:0; }
+.proy-h3 {
+  font-family:'Rajdhani',sans-serif; font-weight:700; font-size:14px;
+  letter-spacing:1px; text-transform:uppercase; color:var(--clight);
+  margin-bottom:10px; margin-top:24px;
+}
+.proy-p { font-size:14px; color:var(--mt); line-height:1.85; margin-bottom:14px; }
+.proy-p strong { color:var(--tx); }
+
+.info-card {
+  background:var(--bg-2); border:1px solid var(--brd); border-radius:var(--radius-lg);
+  padding:24px; margin-bottom:20px; transition:all .3s;
+}
+.info-card:hover { border-color:rgba(41,182,246,.4); box-shadow:var(--shsm); }
+.info-card-title {
+  font-family:'Bebas Neue',sans-serif; font-size:18px; letter-spacing:2px;
+  color:var(--tx); margin-bottom:10px; display:flex; align-items:center; gap:10px;
+}
+.card-icon {
+  width:34px; height:34px; background:rgba(41,182,246,.10); border-radius:8px;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.card-icon svg { stroke:var(--clight); }
+
+.grid-2c { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin:18px 0; }
+.grid-3c { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin:18px 0; }
+
+.obj-list { list-style:none; display:flex; flex-direction:column; gap:10px; margin:14px 0; }
+.obj-list li {
+  display:flex; align-items:flex-start; gap:11px;
+  font-size:14px; color:var(--mt); line-height:1.6; padding:12px 16px;
+  background:var(--bg-2); border:1px solid var(--brd); border-radius:var(--radius);
+  transition:all .25s;
+}
+.obj-list li:hover { border-color:rgba(41,182,246,.4); }
+.obj-dot {
+  width:22px; height:22px; border-radius:50%; background:var(--gmain);
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Bebas Neue',sans-serif; font-size:11px; color:#fff; flex-shrink:0; margin-top:1px;
+}
+
+.phase-badge {
+  display:inline-flex; align-items:center; gap:7px;
+  padding:5px 14px; border-radius:20px;
+  font-family:'Rajdhani',sans-serif; font-size:11px; font-weight:700;
+  letter-spacing:1px; text-transform:uppercase; margin-bottom:14px;
+}
+.phase-badge.estructurado { background:rgba(41,182,246,.10); color:var(--clight); border:1px solid rgba(41,182,246,.25); }
+.phase-badge.objetos       { background:rgba(38,198,163,.10); color:var(--mint);  border:1px solid rgba(38,198,163,.25); }
+.phase-badge.marco         { background:rgba(245,158,11,.10); color:var(--yellow); border:1px solid rgba(245,158,11,.25); }
+
+/* Gantt */
+.gantt-wrap { overflow-x:auto; }
+.gantt-table { width:100%; border-collapse:collapse; font-size:12px; }
+.gantt-table th {
+  background:var(--bg-3); padding:9px 12px;
+  font-family:'Rajdhani',sans-serif; font-weight:700; font-size:11px;
+  letter-spacing:1.5px; text-transform:uppercase; color:var(--mt);
+  border:1px solid var(--brd); white-space:nowrap; text-align:left;
+}
+.gantt-table td { padding:9px 12px; border:1px solid var(--brd); color:var(--tx); vertical-align:middle; }
+.gantt-cell { width:28px; text-align:center; background:rgba(41,182,246,.15); border-radius:3px; }
+.gantt-cell.done { background:rgba(38,198,163,.20); }
+.gantt-cell.x { background:transparent; }
+
+.badge { padding:3px 9px; border-radius:4px; font-family:'Rajdhani',sans-serif; font-size:11px; font-weight:700; }
+.badge-warning { background:rgba(245,158,11,.15); color:var(--yellow); }
+.badge-info    { background:rgba(41,182,246,.15);  color:var(--clight); }
+.badge-success { background:rgba(38,198,163,.15);  color:var(--mint); }
+
+/* Diagram embed */
+.diagram-embed {
+  background:var(--bg-2); border:1.5px solid var(--brd); border-radius:var(--radius-lg);
+  padding:20px; margin:18px 0; text-align:center; min-height:200px;
+  display:flex; align-items:center; justify-content:center; flex-direction:column; gap:12px;
+}
+.diag-label {
+  font-family:'Rajdhani',sans-serif; font-size:11px; font-weight:700;
+  letter-spacing:2px; text-transform:uppercase; color:var(--mt); margin-top:8px;
+}
+
+/* Table of contents */
+.toc { background:var(--bg-2); border:1px solid var(--brd); border-radius:var(--radius-lg); padding:22px 26px; margin:20px 0; }
+.toc-title { font-family:'Bebas Neue',sans-serif; font-size:18px; letter-spacing:2px; color:var(--tx); margin-bottom:16px; }
+.toc ol { padding-left:20px; }
+.toc li { font-size:13px; color:var(--mt); margin-bottom:6px; line-height:1.6; }
+.toc li strong { color:var(--tx); }
+
+/* UML classes */
+.uml-class {
+  background:var(--bg-2); border:2px solid var(--brd); border-radius:var(--radius);
+  overflow:hidden; font-size:12px; font-family:'Rajdhani',sans-serif; margin-bottom:14px;
+}
+.uml-class-name { background:var(--gmain); color:#fff; padding:8px 14px; font-weight:700; font-size:14px; letter-spacing:1px; text-align:center; }
+.uml-class-name.abstract { background:var(--galt); }
+.uml-section { padding:8px 12px; border-top:1px solid var(--brd); }
+.uml-attr { padding:2px 0; color:var(--mt); }
+.uml-attr span { color:var(--red); font-size:11px; }
+.uml-method { padding:2px 0; color:var(--clight); }
+
+/* Actor grid */
+.actor-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:14px; margin:16px 0; }
+.actor-card {
+  background:var(--bg-2); border:1px solid var(--brd); border-radius:var(--radius-lg);
+  padding:18px 14px; text-align:center; transition:all .3s;
+}
+.actor-card:hover { border-color:rgba(41,182,246,.4); transform:translateY(-2px); box-shadow:var(--shsm); }
+.actor-icon { font-size:28px; margin-bottom:8px; }
+.actor-name { font-family:'Rajdhani',sans-serif; font-weight:700; font-size:13px; color:var(--tx); margin-bottom:4px; }
+.actor-role { font-size:11px; color:var(--mt); line-height:1.5; }
+
+/* UC table */
+.uc-table { width:100%; border-collapse:collapse; font-size:13px; margin:14px 0; }
+.uc-table th { background:var(--bg-3); padding:10px 14px; font-family:'Rajdhani',sans-serif; font-size:11px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--mt); border:1px solid var(--brd); text-align:left; }
+.uc-table td { padding:10px 14px; border:1px solid var(--brd); color:var(--tx); vertical-align:top; }
+.uc-table tr:hover td { background:rgba(41,182,246,.03); }
+
+/* CUE card */
+.cue-card { background:var(--bg-2); border:1px solid var(--brd); border-radius:var(--radius-lg); margin-bottom:22px; overflow:hidden; }
+.cue-header { padding:16px 20px; background:var(--bg-3); border-bottom:1px solid var(--brd); font-family:'Bebas Neue',sans-serif; font-size:17px; letter-spacing:2px; color:var(--tx); display:flex; align-items:center; gap:10px; }
+.cue-header .card-icon svg { stroke:var(--clight); }
+.cue-row { display:grid; grid-template-columns:140px 1fr; border-bottom:1px solid var(--brd); }
+.cue-row:last-child { border-bottom:none; }
+.cue-label { padding:10px 14px; background:var(--bg-3); font-family:'Rajdhani',sans-serif; font-weight:700; font-size:11px; letter-spacing:1px; text-transform:uppercase; color:var(--mt); border-right:1px solid var(--brd); }
+.cue-val { padding:10px 14px; font-size:13px; color:var(--tx); line-height:1.7; }
+
+/* Videos */
+.video-card { background:var(--bg-2); border:1px solid var(--brd); border-radius:var(--radius-lg); overflow:hidden; }
+.video-thumb {
+  position:relative; padding-top:56.25%; background:var(--bg-4);
+  cursor:pointer;
+}
+.video-thumb iframe {
+  position:absolute; inset:0; width:100%; height:100%; border:none;
+}
+.video-placeholder {
+  position:absolute; inset:0; display:flex; align-items:center;
+  justify-content:center; flex-direction:column; gap:10px; color:var(--mt);
+}
+.video-meta { padding:14px 16px; }
+.video-title { font-family:'Rajdhani',sans-serif; font-weight:700; font-size:14px; color:var(--tx); margin-bottom:5px; }
+.video-desc { font-size:12px; color:var(--mt); line-height:1.5; }
+
+/* Contact */
+.contact-info-row { display:flex; gap:10px; align-items:center; padding:10px 0; border-bottom:1px solid var(--brd); }
+.contact-info-row:last-child { border-bottom:none; }
+.contact-label { font-size:10px; font-family:'Rajdhani',sans-serif; letter-spacing:1px; text-transform:uppercase; color:var(--mt); }
+.contact-val { font-size:13px; color:var(--tx); }
+.contact-icon { font-size:18px; width:28px; flex-shrink:0; }
+
+.member-row { display:flex; gap:12px; align-items:flex-start; padding:12px 0; border-bottom:1px solid var(--brd); }
+.member-row:last-child { border-bottom:none; }
+.member-name { font-family:'Rajdhani',sans-serif; font-weight:700; font-size:13px; color:var(--tx); }
+.member-phone { font-size:11px; color:var(--mt); }
+.member-email { font-size:11px; color:var(--clight); }
+
+/* ============================================================
+   DER TABLE
+============================================================ */
+.der-table { width:100%; border-collapse:collapse; font-size:12px; }
+.der-table th { background:var(--bg-3); padding:9px 12px; border:1px solid var(--brd); font-family:'Rajdhani',sans-serif; font-size:11px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--mt); text-align:left; }
+.der-table td { padding:8px 12px; border:1px solid var(--brd); vertical-align:middle; }
+
+/* ============================================================
+   FOOTER
+============================================================ */
+footer {
+  background:var(--bg-2); border-top:1px solid var(--brd);
+  padding:32px 24px;
+}
+.footer-inner {
+  max-width:1300px; margin:0 auto;
+  display:grid; grid-template-columns:1fr auto 1fr;
+  align-items:center; gap:24px;
+}
+.footer-brand {
+  display:flex; align-items:center; gap:10px;
+}
+.footer-logo-mark {
+  width:32px; height:32px; border-radius:8px;
+  background:var(--gmain);
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Bebas Neue',sans-serif; font-size:16px; color:#fff;
+}
+.footer-brand-text { font-family:'Bebas Neue',sans-serif; font-size:18px; letter-spacing:3px; color:var(--tx); }
+.footer-brand-sub { font-size:11px; color:var(--mt); font-family:'Rajdhani',sans-serif; letter-spacing:1px; }
+.footer-center { text-align:center; }
+.footer-copy { font-size:11px; color:var(--mt-2); line-height:1.7; }
+.footer-copy strong { color:var(--mt); }
+.footer-right {
+  display:flex; flex-direction:column; align-items:flex-end; gap:8px;
+}
+.footer-links { display:flex; gap:16px; }
+.footer-link {
+  font-family:'Rajdhani',sans-serif; font-size:12px; font-weight:600;
+  letter-spacing:1px; text-transform:uppercase; color:var(--mt);
+  text-decoration:none; cursor:pointer; transition:color .2s;
+}
+.footer-link:hover { color:var(--clight); }
+.footer-accent {
+  width:60px; height:2px; background:var(--gmain); border-radius:2px;
+}
+
+/* ============================================================
+   ANIMATIONS
+============================================================ */
+.page.active { animation:fadeUp .35s ease; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+
+/* ============================================================
+   DROPDOWN NAV
+============================================================ */
+.nav-dropdown { position:relative; }
+.nav-dropdown-menu {
+  display:none; position:absolute; top:calc(100% + 8px); left:0;
+  background:var(--bg-2); border:1px solid var(--brd);
+  border-radius:var(--radius-lg); box-shadow:var(--shlg);
+  min-width:240px; z-index:2000; padding:6px;
+  animation:fadeUp .2s ease;
+}
+.nav-dropdown:hover .nav-dropdown-menu,
+.nav-dropdown.open .nav-dropdown-menu { display:block; }
+.nav-dropdown-item {
+  display:flex; align-items:center; gap:9px;
+  padding:9px 13px; border-radius:var(--radius);
+  font-family:'Rajdhani',sans-serif; font-size:12px; font-weight:700;
+  letter-spacing:.4px; text-transform:uppercase;
+  color:var(--mt); cursor:pointer; transition:all .18s;
+  border:none; background:none; width:100%; text-align:left; white-space:nowrap;
+}
+.nav-dropdown-item:hover { color:var(--clight); background:rgba(41,182,246,.08); }
+.nav-dropdown-item .drop-num {
+  width:20px; height:20px; border-radius:4px;
+  background:var(--bg-3); border:1px solid var(--brd);
+  font-size:10px; display:flex; align-items:center; justify-content:center;
+  color:var(--mt-2); flex-shrink:0;
+}
+.nav-dropdown-item:hover .drop-num { background:rgba(41,182,246,.15); border-color:rgba(41,182,246,.3); color:var(--clight); }
+.drop-chevron {
+  margin-left:4px; transition:transform .2s;
+  display:inline-block; vertical-align:middle;
+}
+.nav-dropdown:hover .drop-chevron,
+.nav-dropdown.open .drop-chevron { transform:rotate(180deg); }
+.nav-dropdown-divider {
+  height:1px; background:var(--brd); margin:4px 6px;
+}
+.nav-dropdown-header {
+  padding:6px 13px 4px;
+  font-family:'Rajdhani',sans-serif; font-size:10px; font-weight:700;
+  letter-spacing:2px; text-transform:uppercase; color:var(--mt-2);
+}
+
+/* ============================================================
+   HERO EXTENDED SECTIONS
+============================================================ */
+.gym-sections { max-width:1100px; margin:0 auto; padding:0 24px 80px; }
+
+.gym-about {
+  display:grid; grid-template-columns:1fr 1fr; gap:32px;
+  padding:64px 0 48px; align-items:center;
+}
+.gym-about-text {}
+.gym-about-eyebrow {
+  font-family:'Rajdhani',sans-serif; font-size:11px; font-weight:700;
+  letter-spacing:3px; text-transform:uppercase; color:var(--clight); margin-bottom:12px;
+}
+.gym-about-title {
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(32px,4vw,52px); letter-spacing:4px; color:var(--tx); line-height:1;
+  margin-bottom:16px;
+}
+.gym-about-title span { background:var(--gmain); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+.gym-about-desc { font-size:14px; color:var(--mt); line-height:1.85; margin-bottom:14px; }
+.gym-location-pill {
+  display:inline-flex; align-items:center; gap:8px;
+  padding:8px 18px; border-radius:20px;
+  background:rgba(38,198,163,.08); border:1px solid rgba(38,198,163,.25);
+  font-family:'Rajdhani',sans-serif; font-size:12px; font-weight:700;
+  letter-spacing:1px; text-transform:uppercase; color:var(--mint);
+  margin-top:8px;
+}
+.gym-about-visual {
+  background:var(--bg-2); border:1px solid var(--brd); border-radius:var(--radius-lg);
+  padding:32px 24px; text-align:center;
+  background:linear-gradient(160deg,var(--bg-2),var(--bg-3));
+}
+.gym-visual-icon { font-size:64px; margin-bottom:16px; }
+.gym-visual-name {
+  font-family:'Bebas Neue',sans-serif; font-size:32px; letter-spacing:4px;
+  background:var(--gmain); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+  margin-bottom:6px;
+}
+.gym-visual-address {
+  font-family:'Rajdhani',sans-serif; font-size:13px; font-weight:600; color:var(--mt); line-height:1.7;
+}
+.gym-visual-hours {
+  margin-top:20px; padding-top:16px; border-top:1px solid var(--brd);
+  font-size:12px; color:var(--mt); display:flex; flex-direction:column; gap:6px;
+}
+.gym-visual-hours .h-row { display:flex; justify-content:space-between; padding:4px 0; }
+.gym-visual-hours .h-day { color:var(--tx); font-family:'Rajdhani',sans-serif; font-weight:700; font-size:12px; letter-spacing:.5px; }
+.gym-visual-hours .h-time { color:var(--clight); font-size:12px; }
+
+.gym-pillars {
+  padding:16px 0 56px;
+}
+.gym-pillars-title {
+  font-family:'Bebas Neue',sans-serif; font-size:clamp(28px,3.5vw,44px);
+  letter-spacing:4px; color:var(--tx); text-align:center; margin-bottom:8px;
+}
+.gym-pillars-title span { background:var(--galt); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+.gym-pillars-sub {
+  text-align:center; font-size:14px; color:var(--mt); margin-bottom:40px;
+}
+.pillars-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+.pillar-card {
+  background:var(--bg-2); border:1px solid var(--brd); border-radius:var(--radius-lg);
+  padding:28px 22px; transition:all .3s; position:relative; overflow:hidden;
+}
+.pillar-card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:3px;
+  background:var(--gmain); transform:scaleX(0); transform-origin:left;
+  transition:transform .3s;
+}
+.pillar-card:hover { border-color:rgba(41,182,246,.35); transform:translateY(-3px); box-shadow:var(--shlg); }
+.pillar-card:hover::before { transform:scaleX(1); }
+.pillar-icon { font-size:36px; margin-bottom:14px; }
+.pillar-title {
+  font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:2px;
+  color:var(--tx); margin-bottom:10px;
+}
+.pillar-desc { font-size:13px; color:var(--mt); line-height:1.75; }
+
+.gym-equipment {
+  padding:16px 0 56px;
+}
+.gym-equipment-title {
+  font-family:'Bebas Neue',sans-serif; font-size:clamp(28px,3.5vw,44px);
+  letter-spacing:4px; color:var(--tx); text-align:center; margin-bottom:8px;
+}
+.gym-equipment-title span { background:var(--gmain); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+.gym-equipment-sub { text-align:center; font-size:14px; color:var(--mt); margin-bottom:40px; }
+.equipment-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+.equip-card {
+  background:var(--bg-2); border:1px solid var(--brd); border-radius:var(--radius-lg);
+  padding:20px 16px; text-align:center; transition:all .3s;
+}
+.equip-card:hover { border-color:rgba(38,198,163,.4); transform:translateY(-2px); box-shadow:var(--shsm); }
+.equip-icon { font-size:28px; margin-bottom:10px; }
+.equip-name { font-family:'Rajdhani',sans-serif; font-weight:700; font-size:13px; color:var(--tx); margin-bottom:5px; letter-spacing:.5px; }
+.equip-desc { font-size:11px; color:var(--mt); line-height:1.5; }
+.equip-badge {
+  display:inline-block; margin-top:8px; padding:2px 8px; border-radius:4px;
+  font-family:'Rajdhani',sans-serif; font-size:10px; font-weight:700; letter-spacing:1px;
+  background:rgba(38,198,163,.12); color:var(--mint); border:1px solid rgba(38,198,163,.2);
+}
+
+.gym-commitment {
+  padding:16px 0 56px;
+}
+.commitment-inner {
+  background:linear-gradient(160deg,var(--bg-2),var(--bg-3));
+  border:1px solid var(--brd); border-radius:var(--radius-lg);
+  padding:48px 40px; text-align:center;
+}
+.commitment-eyebrow {
+  font-family:'Rajdhani',sans-serif; font-size:11px; font-weight:700;
+  letter-spacing:3px; text-transform:uppercase; color:var(--yellow); margin-bottom:12px;
+}
+.commitment-title {
+  font-family:'Bebas Neue',sans-serif; font-size:clamp(30px,4vw,48px);
+  letter-spacing:4px; color:var(--tx); margin-bottom:16px;
+}
+.commitment-title span { background:var(--galt); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+.commitment-desc { font-size:14px; color:var(--mt); line-height:1.85; max-width:680px; margin:0 auto 36px; }
+.commitment-stats {
+  display:flex; justify-content:center; gap:48px; flex-wrap:wrap; margin-bottom:36px;
+}
+.commit-stat {}
+.commit-num {
+  font-family:'Bebas Neue',sans-serif; font-size:44px; letter-spacing:2px;
+  background:var(--galt); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+  line-height:1;
+}
+.commit-lbl {
+  font-family:'Rajdhani',sans-serif; font-size:11px; font-weight:700;
+  letter-spacing:2px; text-transform:uppercase; color:var(--mt); margin-top:4px;
+}
+.commitment-values {
+  display:flex; justify-content:center; gap:12px; flex-wrap:wrap;
+}
+.commit-val-tag {
+  padding:8px 18px; border-radius:20px;
+  background:rgba(245,158,11,.08); border:1px solid rgba(245,158,11,.2);
+  font-family:'Rajdhani',sans-serif; font-size:12px; font-weight:700;
+  letter-spacing:1px; text-transform:uppercase; color:var(--yellow);
+}
+
+.gym-team-section { padding:16px 0 56px; }
+.gym-team-title {
+  font-family:'Bebas Neue',sans-serif; font-size:clamp(28px,3.5vw,44px);
+  letter-spacing:4px; color:var(--tx); text-align:center; margin-bottom:8px;
+}
+.gym-team-title span { background:var(--gmain); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+.gym-team-sub { text-align:center; font-size:14px; color:var(--mt); margin-bottom:40px; }
+.team-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:18px; }
+.team-card {
+  background:var(--bg-2); border:1px solid var(--brd); border-radius:var(--radius-lg);
+  padding:26px 18px; text-align:center; transition:all .3s;
+}
+.team-card:hover { border-color:rgba(41,182,246,.4); transform:translateY(-3px); box-shadow:var(--shsm); }
+.team-avatar {
+  width:60px; height:60px; border-radius:50%; background:var(--gmain);
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Bebas Neue',sans-serif; font-size:22px; color:#fff;
+  margin:0 auto 12px; letter-spacing:1px;
+}
+.team-name { font-family:'Bebas Neue',sans-serif; font-size:17px; letter-spacing:2px; color:var(--tx); margin-bottom:4px; }
+.team-role {
+  font-family:'Rajdhani',sans-serif; font-size:11px; font-weight:700;
+  letter-spacing:1px; text-transform:uppercase; color:var(--clight); margin-bottom:10px;
+}
+.team-desc { font-size:12px; color:var(--mt); line-height:1.6; }
+
+.gym-community { padding:16px 0 32px; }
+.community-inner {
+  display:grid; grid-template-columns:1fr 1fr; gap:32px; align-items:center;
+}
+.community-text-block {}
+.community-eyebrow {
+  font-family:'Rajdhani',sans-serif; font-size:11px; font-weight:700;
+  letter-spacing:3px; text-transform:uppercase; color:var(--mint); margin-bottom:12px;
+}
+.community-title {
+  font-family:'Bebas Neue',sans-serif; font-size:clamp(28px,3.5vw,44px);
+  letter-spacing:4px; color:var(--tx); line-height:1; margin-bottom:16px;
+}
+.community-title span { background:var(--gmain); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+.community-desc { font-size:14px; color:var(--mt); line-height:1.85; margin-bottom:20px; }
+.community-features { display:flex; flex-direction:column; gap:10px; }
+.community-feat {
+  display:flex; align-items:flex-start; gap:12px;
+  padding:12px 16px; background:var(--bg-2); border:1px solid var(--brd);
+  border-radius:var(--radius); transition:all .25s;
+}
+.community-feat:hover { border-color:rgba(38,198,163,.4); }
+.community-feat-icon { font-size:20px; flex-shrink:0; margin-top:1px; }
+.community-feat-text {}
+.community-feat-title { font-family:'Rajdhani',sans-serif; font-weight:700; font-size:13px; color:var(--tx); margin-bottom:3px; }
+.community-feat-desc { font-size:12px; color:var(--mt); line-height:1.55; }
+.community-visual-block {
+  display:grid; grid-template-columns:1fr 1fr; gap:14px;
+}
+.community-box {
+  background:var(--bg-2); border:1px solid var(--brd); border-radius:var(--radius-lg);
+  padding:22px 18px; text-align:center; transition:all .3s;
+}
+.community-box:hover { border-color:rgba(38,198,163,.4); transform:translateY(-2px); }
+.community-box-icon { font-size:30px; margin-bottom:10px; }
+.community-box-num {
+  font-family:'Bebas Neue',sans-serif; font-size:30px; letter-spacing:2px;
+  background:var(--gmain); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+  line-height:1;
+}
+.community-box-lbl { font-family:'Rajdhani',sans-serif; font-size:10px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--mt); margin-top:4px; }
+
+.section-sep {
+  height:1px; background:var(--brd); margin:0;
+  background:linear-gradient(90deg,transparent,var(--brd),transparent);
+}
+
+/* ============================================================
+   RESPONSIVE
+============================================================ */
+@media(max-width:1100px){
+  .equipment-grid { grid-template-columns:repeat(3,1fr); }
+  .team-grid { grid-template-columns:repeat(2,1fr); }
+  .pillars-grid { grid-template-columns:1fr 1fr; }
+}
+
+@media(max-width:900px){
+  /* Nav */
+  .nav-links { display:none; }
+  .ham-btn { display:flex; }
+
+  /* Footer */
+  .footer-inner { grid-template-columns:1fr; text-align:center; gap:16px; }
+  .footer-right { align-items:center; }
+  .footer-brand { justify-content:center; }
+
+  /* Grids generales */
+  .grid-2c,.grid-3c { grid-template-columns:1fr; }
+  .actor-grid { grid-template-columns:repeat(2,1fr); }
+  .cue-row { grid-template-columns:1fr; }
+  .cue-label { border-right:none; border-bottom:1px solid var(--brd); }
+  .hero-stats { gap:24px; }
+
+  /* Inicio ampliado */
+  .gym-about { grid-template-columns:1fr; }
+  .pillars-grid { grid-template-columns:1fr; }
+  .equipment-grid { grid-template-columns:repeat(2,1fr); }
+  .team-grid { grid-template-columns:repeat(2,1fr); }
+  .community-inner { grid-template-columns:1fr; }
+  .community-visual-block { grid-template-columns:repeat(2,1fr); }
+  .commitment-inner { padding:32px 20px; }
+  .commitment-stats { gap:28px; }
+  .gym-sections { padding:0 16px 60px; }
+  .gym-about { padding:40px 0 32px; }
+  .gym-pillars,.gym-equipment,.gym-commitment,.gym-team-section,.gym-community { padding:12px 0 40px; }
+}
+
+@media(max-width:640px){
+  .equipment-grid { grid-template-columns:repeat(2,1fr); }
+  .team-grid { grid-template-columns:1fr 1fr; }
+  .community-visual-block { grid-template-columns:repeat(2,1fr); }
+  .commitment-stats { gap:20px; flex-wrap:wrap; justify-content:center; }
+  .commit-num { font-size:36px; }
+  .commitment-values { gap:8px; }
+  .commit-val-tag { font-size:11px; padding:6px 12px; }
+  .hero-cta { flex-direction:column; align-items:center; gap:10px; }
+  .hero-cta .btn-primary, .hero-cta .btn-outline { width:100%; max-width:280px; justify-content:center; }
+  .hero-team { flex-direction:column; align-items:center; gap:8px; }
+  .hero-member { width:100%; max-width:280px; text-align:center; }
+}
+
+@media(max-width:500px){
+  .hero-title { font-size:clamp(42px,10vw,64px); }
+  .page-shell { padding:32px 16px 48px; }
+  .nav-inner { padding:0 14px; }
+  .btn-gympower span { display:none; }
+  .actor-grid { grid-template-columns:1fr 1fr; }
+  .equipment-grid { grid-template-columns:1fr 1fr; }
+  .team-grid { grid-template-columns:1fr; }
+  .community-visual-block { grid-template-columns:repeat(2,1fr); }
+  .gym-about-title { font-size:30px; }
+  .gym-pillars-title,.gym-equipment-title,.gym-team-title,.community-title { font-size:28px; }
+  .commitment-title { font-size:26px; }
+  .gym-visual-hours .h-row { flex-direction:column; gap:1px; }
+  .pillar-card { padding:20px 16px; }
+  .nav-dropdown-menu { min-width:200px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ==================== NAVBAR ==================== -->
+<header>
+<nav class="navbar">
+  <div class="nav-inner">
+    <a class="nav-logo" onclick="goPage('inicio')" href="#">
+      <div class="nav-logo-mark">GP</div>
+      <div>
+        <div class="nav-logo-text">GymPower</div>
+        <div class="nav-logo-sub">Análisis y Diseño</div>
+      </div>
+    </a>
+    <div class="nav-links">
+      <button class="nav-link active" onclick="goPage('inicio')" id="nav-inicio">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Inicio
+      </button>
+      <!-- MARCO TEÓRICO dropdown -->
+      <div class="nav-dropdown">
+        <button class="nav-link" onclick="goPage('marco')" id="nav-marco">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          Marco Teórico
+          <svg class="drop-chevron" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="nav-dropdown-menu">
+          <div class="nav-dropdown-header">Contenido</div>
+          <button class="nav-dropdown-item" onclick="goPage('marco','sec-intro')"><span class="drop-num">1</span>Introducción</button>
+          <button class="nav-dropdown-item" onclick="goPage('marco','sec-antecedentes')"><span class="drop-num">2</span>Antecedentes</button>
+          <button class="nav-dropdown-item" onclick="goPage('marco','sec-problema')"><span class="drop-num">3</span>Planteamiento del Problema</button>
+          <button class="nav-dropdown-item" onclick="goPage('marco','sec-arbol')"><span class="drop-num">4</span>Árbol de Problemas</button>
+          <button class="nav-dropdown-item" onclick="goPage('marco','sec-formulacion')"><span class="drop-num">5</span>Formulación del Problema</button>
+          <button class="nav-dropdown-item" onclick="goPage('marco','sec-proposito')"><span class="drop-num">6</span>Propósito del Estudio</button>
+          <button class="nav-dropdown-item" onclick="goPage('marco','sec-metodologia')"><span class="drop-num">7</span>Metodología</button>
+          <button class="nav-dropdown-item" onclick="goPage('marco','sec-gantt')"><span class="drop-num">8</span>Planificación de Actividades (Gantt)</button>
+        </div>
+      </div>
+
+      <!-- ANÁLISIS ESTRUCTURADO dropdown -->
+      <div class="nav-dropdown">
+        <button class="nav-link" onclick="goPage('estructurado')" id="nav-estructurado">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+         Análisis Estructurado
+          <svg class="drop-chevron" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="nav-dropdown-menu">
+          <div class="nav-dropdown-header">Modelo Ambiental</div>
+          <button class="nav-dropdown-item" onclick="goPage('estructurado','sec-declaracion')"><span class="drop-num">1</span>Declaración de Propósitos</button>
+          <button class="nav-dropdown-item" onclick="goPage('estructurado','sec-dfd0')"><span class="drop-num">2</span>DFD N0 — Diagrama de Contexto</button>
+          <button class="nav-dropdown-item" onclick="goPage('estructurado','sec-eventos')"><span class="drop-num">3</span>Lista de Acontecimientos</button>
+          <div class="nav-dropdown-divider"></div>
+          <div class="nav-dropdown-header">Modelo de Comportamiento</div>
+          <button class="nav-dropdown-item" onclick="goPage('estructurado','sec-dfd1')"><span class="drop-num">4</span>DFD Nivel 1</button>
+          <button class="nav-dropdown-item" onclick="goPage('estructurado','sec-dfd2')"><span class="drop-num">5</span>DFD Nivel 2</button>
+          <button class="nav-dropdown-item" onclick="goPage('estructurado','sec-der')"><span class="drop-num">6</span>DER — Entidad Relación</button>
+        </div>
+      </div>
+
+      <!-- ORIENTADA A OBJETOS dropdown -->
+      <div class="nav-dropdown">
+        <button class="nav-link" onclick="goPage('objetos')" id="nav-objetos">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg>
+          Orientada a Objetos
+          <svg class="drop-chevron" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="nav-dropdown-menu">
+          <div class="nav-dropdown-header">Diagramas</div>
+          <button class="nav-dropdown-item" onclick="goPage('objetos','sec-clases')"><span class="drop-num">1</span>Diagrama de Clases UML</button>
+          <button class="nav-dropdown-item" onclick="goPage('objetos','sec-cusis')"><span class="drop-num">2</span>Casos de Uso del Sistema</button>
+          <button class="nav-dropdown-item" onclick="goPage('objetos','sec-cuneg')"><span class="drop-num">3</span>Casos de Uso de Negocio</button>
+          <button class="nav-dropdown-item" onclick="goPage('objetos','sec-cue')"><span class="drop-num">4</span>Casos de Uso Expandidos</button>
+          <button class="nav-dropdown-item" onclick="goPage('objetos','sec-swimlanes')"><span class="drop-num">5</span>Diagrama de Procesos (Swimlanes)</button>
+          <button class="nav-dropdown-item" onclick="goPage('objetos','sec-secuencia')"><span class="drop-num">6</span>Diagrama de Secuencia</button>
+        </div>
+      </div>
+      <button class="nav-link" onclick="goPage('videos')" id="nav-videos">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+        Videos
+      </button>
+      <button class="nav-link" onclick="goPage('contacto')" id="nav-contacto">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Contacto
+      </button>
+    </div>
+    <div class="nav-actions">
+      <a href="http://gympower.kesug.com/" target="_blank" rel="noopener" class="btn-gympower">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        <span>Visitar GymPower</span>
+      </a>
+      <button class="theme-btn" onclick="toggleTheme()" title="Cambiar tema" aria-label="Cambiar tema">
+        <svg id="themeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+      <button class="ham-btn" onclick="toggleMobile()" aria-label="Menú">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+    </div>
+  </div>
+  <!-- Mobile dropdown -->
+  <div class="mobile-nav" id="mobileNav">
+    <button class="nav-link" onclick="goPage('inicio')">Inicio</button>
+    <button class="nav-link" onclick="goPage('marco')">Marco Teórico</button>
+    <button class="nav-link" onclick="goPage('estructurado')">Análisis Estructurado</button>
+    <button class="nav-link" onclick="goPage('objetos')">Orientada a Objetos</button>
+    <button class="nav-link" onclick="goPage('videos')">Videos</button>
+    <button class="nav-link" onclick="goPage('contacto')">Contacto</button>
+  </div>
+</nav>
+</header>
+
+<main>
+
+<!-- ==================== INICIO ==================== -->
+<section class="page active" id="page-inicio">
+  <div class="hero" id="sec-hero">
+    <div class="hero-inner">
+      <div class="hero-badge">
+        <div class="hero-badge-dot"></div>
+        Universidad Boliviana · La Paz · Gestión 2026
+      </div>
+      <div class="hero-title">GYM<span>POWER</span></div>
+      <div class="hero-subtitle">Centro Deportivo — La Paz, Bolivia</div>
+      <p class="hero-desc">El gimnasio de élite ubicado en <strong style="color:var(--clight);">CalleVillalobos y Hernando Siles</strong>, La Paz. Transformamos cuerpos y mentes con tecnología de primer nivel, entrenadores certificados y una comunidad que te impulsa cada día.</p>
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <div class="hero-stat-num">6</div>
+          <div class="hero-stat-lbl">Roles de Usuario</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-num">9</div>
+          <div class="hero-stat-lbl">Entidades DER</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-num">8</div>
+          <div class="hero-stat-lbl">Casos de Uso</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-num">12</div>
+          <div class="hero-stat-lbl">Semanas</div>
+        </div>
+      </div>
+      <div class="hero-cta">
+        <button class="btn-primary" onclick="goPage('marco')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          Ver Documentación
+        </button>
+        <a href="http://gympower.kesug.com/" target="_blank" rel="noopener" class="btn-outline">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          Visitar el Sistema
+        </a>
+      </div>
+      <div class="hero-team">
+        <div class="hero-member">Marcelo — Líder de Proyecto</div>
+        <div class="hero-member">Jesús — Backend Developer</div>
+        <div class="hero-member">Villalobos — Frontend / UX</div>
+        <div class="hero-member">Cerrillo — Documentación</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SECCIÓN SOBRE EL GIMNASIO ===== -->
+  <div class="gym-sections">
+
+    <div class="section-sep"></div>
+
+    <!-- SOBRE GYMPOWER -->
+    <div class="gym-about" id="sec-about">
+      <div class="gym-about-text">
+        <div class="gym-about-eyebrow">Sobre Nosotros</div>
+        <div class="gym-about-title">El Gimnasio que <span>La Paz</span> Merece</div>
+        <p class="gym-about-desc">GymPower Bolivia nació con una visión clara: llevar el fitness de alto rendimiento a la ciudad de La Paz. Somos más que un gimnasio — somos un ecosistema de transformación física y mental donde cada visita cuenta, cada repetición importa y cada meta se convierte en realidad.</p>
+        <p class="gym-about-desc">Fundado con el compromiso de ofrecer instalaciones de primer nivel, contamos con equipamiento importado de última generación, entrenadores certificados internacionalmente y programas nutricionales personalizados diseñados para el metabolismo de altura.</p>
+        <p class="gym-about-desc">Nos ubicamos en el corazón de La Paz, en la <strong style="color:var(--tx);">intersección de la CalleVillalobos y Hernando Siles</strong>, un punto estratégico de fácil acceso para toda la ciudad. Nuestra misión es simple: ayudarte a alcanzar la mejor versión de ti mismo, sin excusas.</p>
+        <div class="gym-location-pill">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          CalleVillalobos y Hernando Siles, La Paz
+        </div>
+      </div>
+      <div class="gym-about-visual">
+        <div class="gym-visual-icon"><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--clight)" stroke-width="1.5" stroke-linecap="round"><path d="M6.5 6.5h11M6.5 17.5h11M4 4v16M20 4v16M2 9h4M18 9h4M2 15h4M18 15h4"/></svg></div>
+        <div class="gym-visual-name">GYMPOWER</div>
+        <div class="gym-visual-address">
+          CalleVillalobos esquina<br>
+          Hernando Siles<br>
+          La Paz, Bolivia
+        </div>
+        <div class="gym-visual-hours">
+          <div style="font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mt);margin-bottom:4px;">Horario de Atención</div>
+          <div class="h-row"><span class="h-day">Lunes — Viernes</span><span class="h-time">05:30 — 22:00</span></div>
+          <div class="h-row"><span class="h-day">Sábados</span><span class="h-time">06:00 — 20:00</span></div>
+          <div class="h-row"><span class="h-day">Domingos</span><span class="h-time">07:00 — 14:00</span></div>
+          <div class="h-row"><span class="h-day">Feriados</span><span class="h-time">08:00 — 13:00</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-sep"></div>
+
+    <!-- PILARES -->
+    <div class="gym-pillars" id="sec-pilares">
+      <div class="gym-pillars-title">Nuestros <span>Pilares</span></div>
+      <p class="gym-pillars-sub">Todo lo que hacemos está construido sobre tres fundamentos inamovibles.</p>
+      <div class="pillars-grid">
+        <div class="pillar-card">
+          <div class="pillar-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+          <div class="pillar-title">Compromiso Total</div>
+          <p class="pillar-desc">En GymPower no hay medias tintas. Nos comprometemos con cada socio desde el primer día: rutinas personalizadas, seguimiento constante y metas reales. Nuestros entrenadores no te dejan solo hasta que logras lo que vine a buscar. El compromiso es mutuo y absoluto.</p>
+        </div>
+        <div class="pillar-card">
+          <div class="pillar-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+          <div class="pillar-title">Comunidad Fuerte</div>
+          <p class="pillar-desc">El progreso individual se multiplica en comunidad. En GymPower encontrarás un ambiente de respeto y motivación donde los socios se apoyan mutuamente. Organizamos retos grupales, eventos de nutrición y competencias internas que fortalecen los vínculos más allá de las mancuernas.</p>
+        </div>
+        <div class="pillar-card">
+          <div class="pillar-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+          <div class="pillar-title">Excelencia Constante</div>
+          <p class="pillar-desc">La mediocridad no tiene lugar aquí. Desde el equipamiento que renovamos periódicamente hasta los protocolos de higiene diarios, cada detalle está pensado para darte la mejor experiencia. Certificamos a nuestros entrenadores cada año y actualizamos nuestros programas con las últimas evidencias científicas.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-sep"></div>
+
+    <!-- EQUIPAMIENTO -->
+    <div class="gym-equipment" id="sec-equipamiento">
+      <div class="gym-equipment-title">Equipamiento de <span>Primer Nivel</span></div>
+      <p class="gym-equipment-sub">Más de 200 equipos importados distribuidos en 1,200 m² de instalaciones de alto rendimiento.</p>
+      <div class="equipment-grid">
+        <div class="equip-card">
+          <div class="equip-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><circle cx="12" cy="5" r="2"/><path d="M14 9l-1 4-3 2-2 4M9 9l-2 2-3 1M15 9l3 1 2-1"/></svg></div>
+          <div class="equip-name">Cardio Zone</div>
+          <div class="equip-desc">30 cintas de correr Precor con pantallas integradas, 20 elípticas y 15 bicicletas estáticas de alta inercia.</div>
+          <div class="equip-badge">65 equipos</div>
+        </div>
+        <div class="equip-card">
+          <div class="equip-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M6 5v14M18 5v14M2 8h4M18 8h4M2 16h4M18 16h4M6 8h12M6 16h12"/></svg></div>
+          <div class="equip-name">Zona de Pesas</div>
+          <div class="equip-desc">Mancuernas hasta 60kg, barras olímpicas, rack de sentadillas, plataformas de levantamiento y espejos de piso a techo.</div>
+          <div class="equip-badge">Zona Principal</div>
+        </div>
+        <div class="equip-card">
+          <div class="equip-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></div>
+          <div class="equip-name">Máquinas Selectorizadas</div>
+          <div class="equip-desc">Equipos Life Fitness y Hammer Strength para press, jalón, remo, leg press, extensiones y curl femoral con selector de peso.</div>
+          <div class="equip-badge">40 máquinas</div>
+        </div>
+        <div class="equip-card">
+          <div class="equip-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+          <div class="equip-name">Zona Funcional</div>
+          <div class="equip-desc">TRX, battle ropes, kettlebells, cajas de salto, barras de dominadas y toda la variedad del entrenamiento funcional moderno.</div>
+          <div class="equip-badge">Funcional</div>
+        </div>
+        <div class="equip-card">
+          <div class="equip-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
+          <div class="equip-name">Sala Multiusos</div>
+          <div class="equip-desc">Espacio climatizado de 120 m² para yoga, pilates, clases grupales de spinning y sesiones de stretching con instructores.</div>
+          <div class="equip-badge">120 m²</div>
+        </div>
+        <div class="equip-card">
+          <div class="equip-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg></div>
+          <div class="equip-name">Vestuarios Premium</div>
+          <div class="equip-desc">Casilleros digitales, duchas con agua caliente 24/7, área de toallas, zona de secado y espacio de recuperación post-entreno.</div>
+          <div class="equip-badge">Premium</div>
+        </div>
+        <div class="equip-card">
+          <div class="equip-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+          <div class="equip-name">Tecnología Integrada</div>
+          <div class="equip-desc">Sistema GymPower digital para control de acceso, registro de rutinas, pagos y seguimiento de progreso desde cualquier dispositivo.</div>
+          <div class="equip-badge">Digital</div>
+        </div>
+        <div class="equip-card">
+          <div class="equip-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div>
+          <div class="equip-name">Bar Nutricional</div>
+          <div class="equip-desc">Zona de suplementos, batidos proteicos, barras energéticas y asesoría nutricional en el punto de venta integrado al sistema.</div>
+          <div class="equip-badge">Tienda</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-sep"></div>
+
+    <!-- COMPROMISO -->
+    <div class="gym-commitment" id="sec-compromiso">
+      <div class="commitment-inner">
+        <div class="commitment-eyebrow">Nuestro Compromiso</div>
+        <div class="commitment-title">Resultados <span>Reales</span>, Sin Excusas</div>
+        <p class="commitment-desc">En GymPower Bolivia nos comprometemos con algo que pocos gimnasios se atreven a prometer: resultados medibles. No vendemos sueños — entregamos planes de acción, seguimiento semanal y ajustes continuos hasta que cada socio alcanza sus objetivos. La ciudad de La Paz tiene un nuevo estándar de fitness.</p>
+        <div class="commitment-stats">
+          <div class="commit-stat">
+            <div class="commit-num">500+</div>
+            <div class="commit-lbl">Socios Activos</div>
+          </div>
+          <div class="commit-stat">
+            <div class="commit-num">12</div>
+            <div class="commit-lbl">Entrenadores Cert.</div>
+          </div>
+          <div class="commit-stat">
+            <div class="commit-num">3</div>
+            <div class="commit-lbl">Nutricionistas</div>
+          </div>
+          <div class="commit-stat">
+            <div class="commit-num">98%</div>
+            <div class="commit-lbl">Satisfacción</div>
+          </div>
+        </div>
+        <div class="commitment-values">
+          <div class="commit-val-tag">Disciplina</div>
+          <div class="commit-val-tag">Superación</div>
+          <div class="commit-val-tag">Intensidad</div>
+          <div class="commit-val-tag">Resultados</div>
+          <div class="commit-val-tag">Pasión</div>
+          <div class="commit-val-tag">Respeto</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-sep"></div>
+
+    <!-- EQUIPO -->
+    <div class="gym-team-section" id="sec-equipo">
+      <div class="gym-team-title">Nuestro <span>Equipo</span></div>
+      <p class="gym-team-sub">Profesionales certificados que viven el fitness y entienden la fisiología del entrenamiento en altura.</p>
+      <div class="team-grid">
+        <div class="team-card">
+          <div class="team-avatar">JP</div>
+          <div class="team-name">Jorge P.</div>
+          <div class="team-role">Director Técnico</div>
+          <div class="team-desc">Lic. en Educación Física, certificado NSCA. 10 años formando atletas en La Paz. Especialista en fuerza y potencia a 3,600 msnm.</div>
+        </div>
+        <div class="team-card">
+          <div class="team-avatar">LR</div>
+          <div class="team-name">Lucía R.</div>
+          <div class="team-role">Nutricionista</div>
+          <div class="team-desc">Lic. en Nutrición y Dietética. Especializada en planes para altiplano. Desarrolla dietas adaptadas al metabolismo basal en altura.</div>
+        </div>
+        <div class="team-card">
+          <div class="team-avatar">CM</div>
+          <div class="team-name">Carlos M.</div>
+          <div class="team-role">Entrenador Personal</div>
+          <div class="team-desc">Certificado ACSM e ISSA. Especialista en hipertrofia y pérdida de grasa. Más de 200 transformaciones documentadas en La Paz.</div>
+        </div>
+        <div class="team-card">
+          <div class="team-avatar">VT</div>
+          <div class="team-name">Valeria T.</div>
+          <div class="team-role">Instructora Funcional</div>
+          <div class="team-desc">CrossFit Level 2, TRX Certified, instructora de yoga y pilates. Dirige las clases grupales y el programa de entrenamiento funcional.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-sep"></div>
+
+    <!-- COMUNIDAD -->
+    <div class="gym-community" id="sec-comunidad">
+      <div class="community-inner">
+        <div class="community-text-block">
+          <div class="community-eyebrow">Comunidad GymPower</div>
+          <div class="community-title">Más Fuertes <span>Juntos</span></div>
+          <p class="community-desc">La comunidad GymPower no se queda dentro del gimnasio. Tenemos grupos de WhatsApp por objetivo, retos mensuales con premios, eventos de nutrición, maratones urbanas y un programa de referidos que recompensa a quienes hacen crecer la familia GP.</p>
+          <p class="community-desc">Cada nuevo socio es bienvenido con una semana de inducción gratuita, evaluación física completa y asignación de un entrenador personal. No te dejaremos perdido en tu primera semana.</p>
+          <div class="community-features">
+            <div class="community-feat">
+              <div class="community-feat-icon" style="color:var(--mint);"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></div>
+              <div class="community-feat-text">
+                <div class="community-feat-title">App GymPower Digital</div>
+                <div class="community-feat-desc">Accede a tu rutina, plan nutricional, historial de compras y control de membresía desde el sistema web en cualquier dispositivo.</div>
+              </div>
+            </div>
+            <div class="community-feat">
+              <div class="community-feat-icon" style="color:var(--mint);"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg></div>
+              <div class="community-feat-text">
+                <div class="community-feat-title">Retos Mensuales</div>
+                <div class="community-feat-desc">Competencias internas de fuerza, resistencia y transformación con premios en productos, meses gratis y reconocimientos especiales.</div>
+              </div>
+            </div>
+            <div class="community-feat">
+              <div class="community-feat-icon" style="color:var(--mint);"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>
+              <div class="community-feat-text">
+                <div class="community-feat-title">Talleres y Workshops</div>
+                <div class="community-feat-desc">Talleres mensuales de nutrición deportiva, técnica de levantamiento, recuperación y bienestar mental dictados por expertos locales.</div>
+              </div>
+            </div>
+            <div class="community-feat">
+              <div class="community-feat-icon" style="color:var(--mint);"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+              <div class="community-feat-text">
+                <div class="community-feat-title">Programa de Referidos</div>
+                <div class="community-feat-desc">Trae un amigo y ambos reciben un mes con descuento especial. La comunidad crece y tú también te beneficias por aportar.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="community-visual-block">
+          <div class="community-box">
+            <div class="community-box-icon" style="color:var(--clight);"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:26px;height:26px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+            <div class="community-box-num">500+</div>
+            <div class="community-box-lbl">Miembros Activos</div>
+          </div>
+          <div class="community-box">
+            <div class="community-box-icon" style="color:var(--clight);"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:26px;height:26px;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+            <div class="community-box-num">30+</div>
+            <div class="community-box-lbl">Clases por Semana</div>
+          </div>
+          <div class="community-box">
+            <div class="community-box-icon" style="color:var(--clight);"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:26px;height:26px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+            <div class="community-box-num">4.9</div>
+            <div class="community-box-lbl">Calificación Promedio</div>
+          </div>
+          <div class="community-box">
+            <div class="community-box-icon" style="color:var(--clight);"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:26px;height:26px;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
+            <div class="community-box-num">5+</div>
+            <div class="community-box-lbl">Años en La Paz</div>
+          </div>
+          <div class="community-box">
+            <div class="community-box-icon" style="color:var(--clight);"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:26px;height:26px;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
+            <div class="community-box-num">12</div>
+            <div class="community-box-lbl">Entrenadores Cert.</div>
+          </div>
+          <div class="community-box">
+            <div class="community-box-icon" style="color:var(--clight);"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:26px;height:26px;"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+            <div class="community-box-num">3</div>
+            <div class="community-box-lbl">Nutricionistas</div>
+          </div>
+          <div class="community-box">
+            <div class="community-box-icon" style="color:var(--clight);"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:26px;height:26px;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+            <div class="community-box-num">1.2k</div>
+            <div class="community-box-lbl">m² de Instalaciones</div>
+          </div>
+          <div class="community-box">
+            <div class="community-box-icon" style="color:var(--clight);"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:26px;height:26px;"><path d="M6 5v14M18 5v14M2 8h4M18 8h4M2 16h4M18 16h4M6 8h12M6 16h12"/></svg></div>
+            <div class="community-box-num">200+</div>
+            <div class="community-box-lbl">Equipos</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end gym-sections -->
+</section>
+
+<!-- ==================== MARCO TEÓRICO ==================== -->
+<section class="page" id="page-marco">
+  <div class="page-shell">
+    <div class="page-header">
+      <div class="page-eyebrow">I. Generalidades</div>
+      <div class="page-title">Marco <span>Teórico</span></div>
+      <p class="page-desc">Portada, introducción, antecedentes, planteamiento del problema, objetivos, metodología y planificación del proyecto GymPower.</p>
+    </div>
+
+    <!-- PORTADA -->
+    <div class="info-card" style="background:linear-gradient(160deg,var(--bg-2),var(--bg-3));text-align:center;padding:48px 32px;">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:4px;text-transform:uppercase;color:var(--mt);margin-bottom:6px;">UNIVERSIDAD BOLIVIANA — LA PAZ</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:3px;color:var(--mt);margin-bottom:28px;">INGENIERÍA DE SISTEMAS</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:clamp(32px,4vw,52px);letter-spacing:4px;color:var(--tx);margin-bottom:8px;line-height:1;">GYMPOWER</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:clamp(16px,2vw,24px);letter-spacing:3px;background:var(--gmain);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:32px;">SISTEMA DE GESTIÓN DE GIMNASIO</div>
+      <div style="width:80px;height:2px;background:var(--gmain);margin:0 auto 28px;border-radius:2px;"></div>
+      <p class="proy-p" style="max-width:600px;margin:0 auto 24px;">Análisis y Diseño de Sistemas aplicando el paradigma delAnálisis Estructurado yOrientado a Objetos para el sistema de gestión integral del Centro Deportivo GymPower, La Paz, Bolivia.</p>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:28px;">
+        <div style="background:var(--bg);border:1px solid var(--brd);border-radius:var(--radius);padding:10px 18px;font-family:'Rajdhani',sans-serif;font-weight:600;font-size:13px;color:var(--tx);">Marcelo ·Jesús ·Villalobos ·Cerrillo</div>
+      </div>
+      <div style="margin-top:24px;font-family:'Rajdhani',sans-serif;font-size:12px;letter-spacing:2px;color:var(--mt-2);">GESTIÓN 2026 — DEPARTAMENTO DE LA PAZ, BOLIVIA</div>
+    </div>
+
+    <!-- TABLA DE CONTENIDO -->
+    <div class="proy-h2">TABLA DE CONTENIDO</div>
+    <div class="toc">
+      <div class="toc-title">ÍNDICE GENERAL</div>
+      <ol>
+        <li><strong>I. Generalidades y Marco Teórico</strong>
+          <ol style="margin-top:6px;">
+            <li>Portada</li><li>Introducción</li><li>Antecedentes</li>
+            <li>Planteamiento del Problema</li><li>Árbol de Problemas</li>
+            <li>Formulación del Problema</li><li>Propósito del Estudio</li>
+            <li>Metodología</li><li>Planificación de Actividades (Gantt)</li>
+          </ol>
+        </li>
+        <li style="margin-top:12px;"><strong>II. Análisis y Diseño Estructurado</strong>
+          <ol style="margin-top:6px;">
+            <li>Modelo Ambiental: Declaración de Propósitos, DFD N0, Lista de Acontecimientos</li>
+            <li>Modelo de Comportamiento: DFD Nivel 1 y 2, DER</li>
+          </ol>
+        </li>
+        <li style="margin-top:12px;"><strong>III. Análisis y DiseñoOrientado a Objetos</strong>
+          <ol style="margin-top:6px;">
+            <li>Diagrama de Clases UML</li><li>Casos de Uso del Sistema</li>
+            <li>Casos de Uso de Negocio</li><li>Casos de Uso Expandidos</li>
+            <li>Diagrama de Procesos (Swimlanes)</li><li>Diagrama de Secuencia</li>
+          </ol>
+        </li>
+      </ol>
+    </div>
+
+    <!-- INTRODUCCIÓN -->
+    <div class="proy-h2" id="sec-intro">INTRODUCCIÓN</div>
+    <div class="phase-badge marco">Marco Teórico</div>
+    <p class="proy-p">El presente proyecto tiene como finalidad el <strong>análisis y diseño del sistema de gestión integral GymPower</strong>, un centro deportivo ubicado en la ciudad de La Paz, Departamento de La Paz, Bolivia. El sistema abarca la administración completa del gimnasio: gestión de usuarios por roles, planes de suscripción, tienda online, control de stock, rutinas de entrenamiento, planes nutricionales, tareas de mantenimiento y reportes estadísticos.</p>
+    <p class="proy-p">En el contexto actual, los centros deportivos requieren sistemas informáticos robustos que permitan gestionar múltiples áreas de manera integrada. <strong>GymPower</strong> surge como respuesta a esta necesidad, aplicando las metodologías delAnálisis Estructurado yOrientado a Objetos para garantizar un diseño sólido, escalable y mantenible.</p>
+    <p class="proy-p">El sistema está desarrollado bajo la plataforma <strong>PHP 8 + MySQL + XAMPP</strong>, con una arquitectura MVC simplificada, autenticación por roles y una interfaz moderna. Los 6 roles implementados son:Administrador,Cliente,Entrenador,Nutricionista, Agente de Caja y Personal deLimpieza.</p>
+    <div class="grid-3c">
+      <div class="info-card" style="text-align:center;padding:20px 16px;">
+        <div style="font-size:30px;margin-bottom:8px;"></div>
+        <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--tx);margin-bottom:6px;">Tecnología</div>
+        <div style="font-size:12px;color:var(--mt);">PHP 8, MySQL, XAMPP, HTML5, CSS3, JavaScript</div>
+      </div>
+      <div class="info-card" style="text-align:center;padding:20px 16px;">
+        <div style="font-size:30px;margin-bottom:8px;"></div>
+        <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--tx);margin-bottom:6px;">Ubicación</div>
+        <div style="font-size:12px;color:var(--mt);">La Paz, Departamento de La Paz, calleVillalobos y Hernando Siles, Bolivia</div>
+      </div>
+      <div class="info-card" style="text-align:center;padding:20px 16px;">
+        <div style="font-size:30px;margin-bottom:8px;"></div>
+        <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--tx);margin-bottom:6px;">Roles</div>
+        <div style="font-size:12px;color:var(--mt);">6 roles con permisos diferenciados</div>
+      </div>
+    </div>
+
+    <!-- ANTECEDENTES -->
+    <div class="proy-h2" id="sec-antecedentes">ANTECEDENTES</div>
+    <div class="phase-badge marco">Marco Teórico</div>
+    <p class="proy-p">Los gimnasios y centros deportivos en Bolivia han experimentado un crecimiento sostenido en los últimos años. Sin embargo, la mayoría de estos establecimientos en La Paz gestionan sus operaciones de forma manual o con hojas de cálculo, lo que genera ineficiencias en el control de membresías, inventario y facturación.</p>
+    <div class="proy-h3">Contexto Nacional</div>
+    <p class="proy-p">En Bolivia, la demanda de servicios deportivos premium ha crecido significativamente. Los centros de fitness de La Paz enfrentan el desafío de gestionar <strong>cientos de socios activos</strong>, múltiples entrenadores, servicios de nutrición y tiendas de suplementos, sin un sistema informático centralizado.</p>
+    <div class="proy-h3">Sistemas Existentes</div>
+    <p class="proy-p">Existen soluciones internacionales como Mindbody, Glofox o GymMaster, pero presentan costos elevados en dólares y no se adaptan a la normativa boliviana. <strong>GymPower</strong> surge como solución nacional, personalizable y accesible.</p>
+    <div class="info-card">
+      <div class="info-card-title"><div class="card-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>JUSTIFICACIÓN DEL PROYECTO</div>
+      <p class="proy-p" style="margin:0;">El desarrollo de GymPower se justifica por la <strong>necesidad real de digitalizar</strong> la gestión del gimnasio, reducir errores en facturación, optimizar el control de stock de suplementos, y mejorar la experiencia de los socios mediante una plataforma accesible desde cualquier dispositivo.</p>
+    </div>
+
+    <!-- PLANTEAMIENTO DEL PROBLEMA -->
+    <div class="proy-h2" id="sec-problema">PLANTEAMIENTO DEL PROBLEMA</div>
+    <div class="phase-badge marco">Marco Teórico</div>
+    <p class="proy-p">El Centro Deportivo GymPower en La Paz, Bolivia, gestiona actualmente sus operaciones sin un sistema informático centralizado. Esto genera los siguientes problemas identificados:</p>
+    <ul class="obj-list">
+      <li><div class="obj-dot">1</div><span>Registro manual de membresías con alto riesgo de error y pérdida de información.</span></li>
+      <li><div class="obj-dot">2</div><span>Imposibilidad de controlar en tiempo real el stock de productos en la tienda.</span></li>
+      <li><div class="obj-dot">3</div><span>Ausencia de seguimiento digital de rutinas de entrenamiento y planes nutricionales.</span></li>
+      <li><div class="obj-dot">4</div><span>Facturación manual sin numeración correlativa ni control de métodos de pago.</span></li>
+      <li><div class="obj-dot">5</div><span>Falta de reportes estadísticos para la toma de decisiones gerenciales.</span></li>
+      <li><div class="obj-dot">6</div><span>Control de acceso sin registro digital de entradas y salidas de socios.</span></li>
+      <li><div class="obj-dot">7</div><span>Comunicación deficiente entre entrenadores, nutricionistas y personal administrativo.</span></li>
+    </ul>
+
+    <!-- ÁRBOL DE PROBLEMAS -->
+    <div class="proy-h2" id="sec-arbol">ÁRBOL DE PROBLEMA</div>
+    <div class="phase-badge marco">Marco Teórico</div>
+    <div class="diagram-embed" style="min-height:360px;padding:28px;align-items:flex-start;">
+      <svg viewBox="0 0 700 360" style="width:100%;max-width:700px;font-family:Rajdhani,sans-serif;">
+        <rect x="10" y="10" width="155" height="50" rx="6" fill="rgba(229,57,53,.10)" stroke="#EF5350" stroke-width="1.5"/>
+        <text x="87" y="31" text-anchor="middle" font-size="10" fill="#EF5350" font-weight="700">EFECTOS</text>
+        <text x="87" y="47" text-anchor="middle" font-size="9" fill="var(--tx)">Pérdida de clientes</text>
+        <rect x="175" y="10" width="155" height="50" rx="6" fill="rgba(229,57,53,.10)" stroke="#EF5350" stroke-width="1.5"/>
+        <text x="252" y="31" text-anchor="middle" font-size="10" fill="#EF5350" font-weight="700">EFECTOS</text>
+        <text x="252" y="47" text-anchor="middle" font-size="9" fill="var(--tx)">Pérdidas económicas</text>
+        <rect x="340" y="10" width="155" height="50" rx="6" fill="rgba(229,57,53,.10)" stroke="#EF5350" stroke-width="1.5"/>
+        <text x="417" y="31" text-anchor="middle" font-size="10" fill="#EF5350" font-weight="700">EFECTOS</text>
+        <text x="417" y="47" text-anchor="middle" font-size="9" fill="var(--tx)">Mala experiencia usuario</text>
+        <rect x="505" y="10" width="155" height="50" rx="6" fill="rgba(229,57,53,.10)" stroke="#EF5350" stroke-width="1.5"/>
+        <text x="582" y="31" text-anchor="middle" font-size="10" fill="#EF5350" font-weight="700">EFECTOS</text>
+        <text x="582" y="47" text-anchor="middle" font-size="9" fill="var(--tx)">Desorganización interna</text>
+        <line x1="87" y1="60" x2="350" y2="120" stroke="#EF5350" stroke-width="1" stroke-dasharray="4 2"/>
+        <line x1="252" y1="60" x2="350" y2="120" stroke="#EF5350" stroke-width="1" stroke-dasharray="4 2"/>
+        <line x1="417" y1="60" x2="350" y2="120" stroke="#EF5350" stroke-width="1" stroke-dasharray="4 2"/>
+        <line x1="582" y1="60" x2="350" y2="120" stroke="#EF5350" stroke-width="1" stroke-dasharray="4 2"/>
+        <rect x="170" y="120" width="360" height="60" rx="8" fill="rgba(245,158,11,.12)" stroke="#F59E0B" stroke-width="2"/>
+        <text x="350" y="143" text-anchor="middle" font-size="11" fill="#F59E0B" font-weight="700">PROBLEMA CENTRAL</text>
+        <text x="350" y="160" text-anchor="middle" font-size="10" fill="var(--tx)">Ausencia de sistema de gestión informático</text>
+        <text x="350" y="173" text-anchor="middle" font-size="10" fill="var(--tx)">centralizado en GymPower Bolivia</text>
+        <line x1="350" y1="180" x2="87" y2="250" stroke="#F59E0B" stroke-width="1" stroke-dasharray="4 2"/>
+        <line x1="350" y1="180" x2="252" y2="250" stroke="#F59E0B" stroke-width="1" stroke-dasharray="4 2"/>
+        <line x1="350" y1="180" x2="417" y2="250" stroke="#F59E0B" stroke-width="1" stroke-dasharray="4 2"/>
+        <line x1="350" y1="180" x2="582" y2="250" stroke="#F59E0B" stroke-width="1" stroke-dasharray="4 2"/>
+        <rect x="10" y="250" width="155" height="50" rx="6" fill="rgba(41,182,246,.10)" stroke="#29B6F6" stroke-width="1.5"/>
+        <text x="87" y="271" text-anchor="middle" font-size="10" fill="#29B6F6" font-weight="700">CAUSA 1</text>
+        <text x="87" y="287" text-anchor="middle" font-size="9" fill="var(--tx)">Registro manual</text>
+        <text x="87" y="298" text-anchor="middle" font-size="9" fill="var(--tx)">sin control digital</text>
+        <rect x="175" y="250" width="155" height="50" rx="6" fill="rgba(41,182,246,.10)" stroke="#29B6F6" stroke-width="1.5"/>
+        <text x="252" y="271" text-anchor="middle" font-size="10" fill="#29B6F6" font-weight="700">CAUSA 2</text>
+        <text x="252" y="287" text-anchor="middle" font-size="9" fill="var(--tx)">Sin control de</text>
+        <text x="252" y="298" text-anchor="middle" font-size="9" fill="var(--tx)">stock en tiempo real</text>
+        <rect x="340" y="250" width="155" height="50" rx="6" fill="rgba(41,182,246,.10)" stroke="#29B6F6" stroke-width="1.5"/>
+        <text x="417" y="271" text-anchor="middle" font-size="10" fill="#29B6F6" font-weight="700">CAUSA 3</text>
+        <text x="417" y="287" text-anchor="middle" font-size="9" fill="var(--tx)">Comunicación</text>
+        <text x="417" y="298" text-anchor="middle" font-size="9" fill="var(--tx)">deficiente entre áreas</text>
+        <rect x="505" y="250" width="155" height="50" rx="6" fill="rgba(41,182,246,.10)" stroke="#29B6F6" stroke-width="1.5"/>
+        <text x="582" y="271" text-anchor="middle" font-size="10" fill="#29B6F6" font-weight="700">CAUSA 4</text>
+        <text x="582" y="287" text-anchor="middle" font-size="9" fill="var(--tx)">Sin reportes</text>
+        <text x="582" y="298" text-anchor="middle" font-size="9" fill="var(--tx)">para decisiones</text>
+      </svg>
+      <div class="diag-label">Figura 1 — Árbol de Problemas GymPower</div>
+    </div>
+
+    <!-- FORMULACIÓN -->
+    <div class="proy-h2" id="sec-formulacion">FORMULACIÓN DEL PROBLEMA</div>
+    <div class="info-card" style="border-left:4px solid var(--clight);background:rgba(41,182,246,.04);">
+      <div class="proy-h3" style="margin-top:0;">Pregunta Principal</div>
+      <p class="proy-p" style="font-size:15px;"><em>"¿Cómo puede el Centro Deportivo GymPower en La Paz, Bolivia, optimizar la gestión integral de sus operaciones —membresías, ventas, inventario, entrenamiento y nutrición— mediante el desarrollo e implementación de un sistema informático centralizado basado en el paradigma Estructurado yOrientado a Objetos?"</em></p>
+    </div>
+    <div class="proy-h3">Preguntas Específicas</div>
+    <ul class="obj-list">
+      <li><div class="obj-dot">A</div>¿Qué módulos funcionales debe incluir el sistema para cubrir todas las áreas operativas del gimnasio?</li>
+      <li><div class="obj-dot">B</div>¿Cómo debe estructurarse la base de datos para garantizar integridad referencial y eficiencia en las consultas?</li>
+      <li><div class="obj-dot">C</div>¿Qué roles y permisos son necesarios para asegurar el acceso controlado y seguro al sistema?</li>
+      <li><div class="obj-dot">D</div>¿Cómo se puede implementar una interfaz web accesible y moderna sin depender de frameworks pesados?</li>
+    </ul>
+
+    <!-- PROPÓSITO -->
+    <div class="proy-h2" id="sec-proposito">PROPÓSITO DEL ESTUDIO</div>
+    <div class="proy-h3">Objetivo General</div>
+    <div class="info-card" style="border-left:4px solid var(--mint);">
+      <p class="proy-p" style="margin:0;">Desarrollar e implementar el sistema de gestión integral <strong>GymPower</strong> para el Centro Deportivo de La Paz, Bolivia, aplicando el paradigma delAnálisis Estructurado (DFD, DER) yOrientado a Objetos (UML) con PHP 8 y MySQL sobre plataforma XAMPP.</p>
+    </div>
+    <div class="proy-h3">Objetivos Específicos</div>
+    <ul class="obj-list">
+      <li><div class="obj-dot">1</div>Modelar el sistema mediante DFD de Nivel 0, Nivel 1 y Nivel 2 para identificar todos los flujos de información del gimnasio.</li>
+      <li><div class="obj-dot">2</div>Diseñar el Modelo Entidad-Relación completo con todas las entidades, atributos y relaciones del dominio del problema.</li>
+      <li><div class="obj-dot">3</div>Implementar el Diagrama de Clases UML con jerarquía de herencia para los 6 roles de usuario y las entidades del sistema.</li>
+      <li><div class="obj-dot">4</div>Documentar los Casos de Uso del sistema, de negocio y expandidos para cada actor identificado.</li>
+      <li><div class="obj-dot">5</div>Desarrollar los módulos funcionales: autenticación, tienda online, carrito, planes, rutinas, nutrición, tareas y reportes.</li>
+      <li><div class="obj-dot">6</div>Implementar una interfaz web responsiva con dual tema (claro/oscuro) compatible con todos los navegadores modernos.</li>
+    </ul>
+
+    <!-- METODOLOGÍA -->
+    <div class="proy-h2" id="sec-metodologia">METODOLOGÍA</div>
+    <p class="proy-p">El proyecto aplica la <strong>metodología incremental e iterativa</strong>. Se emplea el método de investigación aplicada con las siguientes herramientas:</p>
+    <div class="grid-2c">
+      <div class="info-card"><div class="info-card-title">Herramientas de Diseño</div><p class="proy-p" style="margin:0;">draw.io para DFD y DER, StarUML para diagramas UML, Mermaid.js para diagramas de flujo en el sistema.</p></div>
+      <div class="info-card"><div class="info-card-title">Stack Tecnológico</div><p class="proy-p" style="margin:0;">PHP 8, MySQL 8, XAMPP, HTML5, CSS3 (variables nativas), JavaScript ES6+.</p></div>
+      <div class="info-card"><div class="info-card-title">Análisis Estructurado</div><p class="proy-p" style="margin:0;">DFD niveles 0/1/2, DER, Diccionario de Datos, Especificaciones de Proceso.</p></div>
+      <div class="info-card"><div class="info-card-title">Orientado a Objetos</div><p class="proy-p" style="margin:0;">UML: Casos de Uso, Clases, Secuencia, Actividades, Componentes.</p></div>
+    </div>
+
+    <!-- PLANIFICACIÓN GANTT -->
+    <div class="proy-h2" id="sec-gantt">PLANIFICACIÓN DE ACTIVIDADES</div>
+    <div class="proy-h3">Diagrama de Gantt — Cronograma del Proyecto</div>
+    <div class="gantt-wrap">
+    <table class="gantt-table">
+      <thead>
+        <tr>
+          <th>Fase</th><th>Actividad</th><th>Responsable</th>
+          <th>S1</th><th>S2</th><th>S3</th><th>S4</th><th>S5</th><th>S6</th>
+          <th>S7</th><th>S8</th><th>S9</th><th>S10</th><th>S11</th><th>S12</th>
+        </tr>
+      </thead>
+      <tbody id="ganttBody"></tbody>
+    </table>
+    </div>
+    <p style="font-size:11px;color:var(--mt);margin-top:8px;">● Actividad planificada &nbsp;|&nbsp; S = Semana &nbsp;|&nbsp; Total: 12 semanas &nbsp;|&nbsp; Gestión 2026</p>
+  </div>
+</section>
+
+<!-- ==================== ANÁLISIS ESTRUCTURADO ==================== -->
+<section class="page" id="page-estructurado">
+  <div class="page-shell">
+    <div class="page-header">
+      <div class="page-eyebrow">II. Análisis y Diseño</div>
+      <div class="page-title">Análisis <span>Estructurado</span></div>
+      <p class="page-desc">Modelo Ambiental (DFD Nivel 0, Lista de Acontecimientos) y Modelo de Comportamiento (DFD Nivel 1 y 2, DER).</p>
+    </div>
+
+    <!-- DECLARACIÓN DE PROPÓSITOS -->
+    <div class="phase-badge estructurado">Análisis Estructurado — Modelo Ambiental</div>
+    <div class="proy-h2" id="sec-declaracion">DECLARACIÓN DE PROPÓSITOS</div>
+    <div class="info-card" style="border-left:4px solid var(--clight);">
+      <div class="proy-h3" style="margin-top:0;">Nombre del Sistema</div>
+      <p class="proy-p"><strong>GymPower</strong> — Sistema de Gestión Integral para Centro Deportivo</p>
+      <div class="proy-h3">Propósito General</div>
+      <p class="proy-p">Automatizar y centralizar todos los procesos operativos del Centro Deportivo GymPower en La Paz, Bolivia, incluyendo: inscripción y gestión de socios, control de membresías, ventas de productos y planes, asignación de rutinas de entrenamiento y planes nutricionales, control de tareas de limpieza y mantenimiento, gestión de inventario, registro de accesos y generación de reportes estadísticos.</p>
+      <div class="proy-h3">Fronteras del Sistema</div>
+      <p class="proy-p" style="margin:0;">El sistema incluye: <strong>autenticación, gestión de 6 roles, tienda online, carrito de compras, POS para caja, rutinas, nutrición, tareas, stock, accesos, estadísticas y reportes PDF.</strong> No incluye: integración con sistemas bancarios externos, app móvil nativa, ni facturación electrónica con impuestos bolivianos.</p>
+    </div>
+
+    <!-- DFD NIVEL 0 -->
+    <div class="proy-h2" id="sec-dfd0">DIAGRAMA DE CONTEXTO (DFD NIVEL 0)</div>
+    <p class="proy-p">El DFD Nivel 0 muestra el sistema como una caja negra con los 6 actores externos y sus flujos de información principales.</p>
+    <div class="diagram-embed" style="min-height:400px;">
+      <svg viewBox="0 0 700 400" style="width:100%;max-width:700px;font-family:Rajdhani,sans-serif;">
+        <defs><marker id="arr1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><polygon points="0,0 10,5 0,10" fill="var(--mt)"/></marker></defs>
+        <rect x="270" y="155" width="160" height="90" rx="8" fill="rgba(41,182,246,.12)" stroke="#29B6F6" stroke-width="2"/>
+        <text x="350" y="191" text-anchor="middle" font-size="13" fill="var(--tx)" font-weight="700">SISTEMA</text>
+        <text x="350" y="208" text-anchor="middle" font-size="13" fill="var(--tx)" font-weight="700">GYMPOWER</text>
+        <text x="350" y="228" text-anchor="middle" font-size="10" fill="var(--mt)">La Paz, Bolivia</text>
+        <!-- Actores -->
+        <rect x="50" y="180" width="110" height="44" rx="6" fill="var(--bg-3)" stroke="var(--brd)" stroke-width="1.5"/>
+        <text x="105" y="206" text-anchor="middle" font-size="12" fill="var(--tx)" font-weight="600">Administrador</text>
+        <rect x="50" y="320" width="110" height="44" rx="6" fill="var(--bg-3)" stroke="var(--brd)" stroke-width="1.5"/>
+        <text x="105" y="346" text-anchor="middle" font-size="12" fill="var(--tx)" font-weight="600">Cliente</text>
+        <rect x="270" y="30" width="110" height="44" rx="6" fill="var(--bg-3)" stroke="var(--brd)" stroke-width="1.5"/>
+        <text x="325" y="56" text-anchor="middle" font-size="12" fill="var(--tx)" font-weight="600">Entrenador</text>
+        <rect x="420" y="30" width="110" height="44" rx="6" fill="var(--bg-3)" stroke="var(--brd)" stroke-width="1.5"/>
+        <text x="475" y="56" text-anchor="middle" font-size="12" fill="var(--tx)" font-weight="600">Nutricionista</text>
+        <rect x="560" y="180" width="110" height="44" rx="6" fill="var(--bg-3)" stroke="var(--brd)" stroke-width="1.5"/>
+        <text x="615" y="206" text-anchor="middle" font-size="12" fill="var(--tx)" font-weight="600">Agente Caja</text>
+        <rect x="560" y="320" width="110" height="44" rx="6" fill="var(--bg-3)" stroke="var(--brd)" stroke-width="1.5"/>
+        <text x="615" y="346" text-anchor="middle" font-size="12" fill="var(--tx)" font-weight="600">Limpieza</text>
+        <!-- Lines -->
+        <line x1="160" y1="202" x2="270" y2="195" stroke="var(--mt)" stroke-width="1.2" marker-end="url(#arr1)"/>
+        <line x1="270" y1="185" x2="160" y2="192" stroke="var(--mt)" stroke-width="1.2" marker-end="url(#arr1)"/>
+        <line x1="160" y1="342" x2="270" y2="232" stroke="var(--mt)" stroke-width="1.2" marker-end="url(#arr1)"/>
+        <line x1="270" y1="242" x2="160" y2="352" stroke="var(--mt)" stroke-width="1.2" marker-end="url(#arr1)"/>
+        <line x1="325" y1="74" x2="330" y2="155" stroke="var(--mt)" stroke-width="1.2" marker-end="url(#arr1)"/>
+        <line x1="340" y1="155" x2="335" y2="74" stroke="var(--mt)" stroke-width="1.2" marker-end="url(#arr1)"/>
+        <line x1="475" y1="74" x2="370" y2="155" stroke="var(--mt)" stroke-width="1.2" marker-end="url(#arr1)"/>
+        <line x1="380" y1="155" x2="485" y2="74" stroke="var(--mt)" stroke-width="1.2" marker-end="url(#arr1)"/>
+        <line x1="560" y1="202" x2="430" y2="195" stroke="var(--mt)" stroke-width="1.2" marker-end="url(#arr1)"/>
+        <line x1="430" y1="205" x2="560" y2="212" stroke="var(--mt)" stroke-width="1.2" marker-end="url(#arr1)"/>
+        <line x1="560" y1="332" x2="430" y2="232" stroke="var(--mt)" stroke-width="1.2" marker-end="url(#arr1)"/>
+        <line x1="430" y1="242" x2="560" y2="342" stroke="var(--mt)" stroke-width="1.2" marker-end="url(#arr1)"/>
+      </svg>
+      <div class="diag-label">Figura 2 — DFD Nivel 0 — Diagrama de Contexto GymPower</div>
+    </div>
+
+    <!-- LISTA DE ACONTECIMIENTOS -->
+    <div class="proy-h2" id="sec-eventos">LISTA DE ACONTECIMIENTOS</div>
+    <table class="uc-table">
+      <thead><tr><th>#</th><th>Acontecimiento</th><th>Actor</th><th>Respuesta del Sistema</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Cliente solicita registro</td><td>Cliente</td><td>Sistema crea cuenta y asigna rol</td></tr>
+        <tr><td>2</td><td>Socio intenta ingresar al gimnasio</td><td>Agente Caja</td><td>Sistema registra acceso y verifica membresía</td></tr>
+        <tr><td>3</td><td>Cliente realiza compra en tienda</td><td>Cliente</td><td>Sistema procesa carrito, pago y genera factura</td></tr>
+        <tr><td>4</td><td>Entrenador asigna rutina</td><td>Entrenador</td><td>Sistema guarda rutina y notifica al cliente</td></tr>
+        <tr><td>5</td><td>Nutricionista crea plan</td><td>Nutricionista</td><td>Sistema almacena plan nutricional del cliente</td></tr>
+        <tr><td>6</td><td>Admin solicita reporte estadístico</td><td>Administrador</td><td>Sistema genera PDF con datos del período</td></tr>
+        <tr><td>7</td><td>Cajero registra venta POS</td><td>Agente Caja</td><td>Sistema actualiza stock y emite factura</td></tr>
+        <tr><td>8</td><td>Personal de limpieza marca tarea</td><td>Limpieza</td><td>Sistema registra completación y timestamp</td></tr>
+        <tr><td>9</td><td>Admin gestiona inventario</td><td>Administrador</td><td>Sistema actualiza stock y alerta mínimos</td></tr>
+        <tr><td>10</td><td>Cliente adquiere plan membresía</td><td>Cliente / Cajero</td><td>Sistema activa suscripción con fecha de expiración</td></tr>
+      </tbody>
+    </table>
+
+    <hr class="section-divider">
+
+    <!-- DFD NIVELES -->
+    <div class="phase-badge estructurado">Análisis Estructurado — Modelo de Comportamiento</div>
+    <div class="proy-h2" id="sec-dfd1">DFD POR NIVELES</div>
+    <div class="proy-h3">DFD Nivel 1 — Procesos Principales</div>
+    <p class="proy-p">Descompone el sistema en 6 procesos principales con sus almacenes de datos:</p>
+    <div class="grid-2c">
+      <div class="info-card" style="padding:16px;">
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px;">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--clight);min-width:40px;">1.0</div>
+          <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:14px;color:var(--tx);">Gestión de Usuarios</div>
+        </div>
+        <div style="font-size:11px;color:var(--mt);">Actor: <strong style="color:var(--tx);">Administrador</strong></div>
+        <div style="font-size:11px;color:var(--mint);">D1 Usuarios, D2Roles</div>
+      </div>
+      <div class="info-card" style="padding:16px;">
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px;">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--clight);min-width:40px;">2.0</div>
+          <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:14px;color:var(--tx);">Gestión de Ventas</div>
+        </div>
+        <div style="font-size:11px;color:var(--mt);">Actor: <strong style="color:var(--tx);">Cajero,Cliente</strong></div>
+        <div style="font-size:11px;color:var(--mint);">D4 Ventas, D5 Pagos</div>
+      </div>
+      <div class="info-card" style="padding:16px;">
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px;">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--clight);min-width:40px;">3.0</div>
+          <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:14px;color:var(--tx);">Gestión de Entrenamiento</div>
+        </div>
+        <div style="font-size:11px;color:var(--mt);">Actor: <strong style="color:var(--tx);">Entrenador,Cliente</strong></div>
+        <div style="font-size:11px;color:var(--mint);">D6 Rutinas, D7 Ejercicios</div>
+      </div>
+      <div class="info-card" style="padding:16px;">
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px;">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--clight);min-width:40px;">4.0</div>
+          <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:14px;color:var(--tx);">Gestión de Nutrición</div>
+        </div>
+        <div style="font-size:11px;color:var(--mt);">Actor: <strong style="color:var(--tx);">Nutricionista,Cliente</strong></div>
+        <div style="font-size:11px;color:var(--mint);">D8 Planes Nutricionales</div>
+      </div>
+      <div class="info-card" style="padding:16px;">
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px;">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--clight);min-width:40px;">5.0</div>
+          <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:14px;color:var(--tx);">Control de Acceso</div>
+        </div>
+        <div style="font-size:11px;color:var(--mt);">Actor: <strong style="color:var(--tx);">Cajero, Sistema</strong></div>
+        <div style="font-size:11px;color:var(--mint);">D9 Accesos</div>
+      </div>
+      <div class="info-card" style="padding:16px;">
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px;">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--clight);min-width:40px;">6.0</div>
+          <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:14px;color:var(--tx);">Gestión de Inventario</div>
+        </div>
+        <div style="font-size:11px;color:var(--mt);">Actor: <strong style="color:var(--tx);">Administrador, Caja</strong></div>
+        <div style="font-size:11px;color:var(--mint);">D3 Productos, D10 Stock</div>
+      </div>
+    </div>
+
+    <div class="proy-h3" id="sec-dfd2">DFD Nivel 2 — Expansión del Proceso 2.0 Ventas</div>
+    <div class="diagram-embed">
+      <svg viewBox="0 0 600 220" style="width:100%;max-width:600px;font-family:Rajdhani,sans-serif;">
+        <defs><marker id="arr3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><polygon points="0,0 10,5 0,10" fill="var(--mt)"/></marker></defs>
+        <rect x="30" y="80" width="110" height="60" rx="7" fill="rgba(41,182,246,.10)" stroke="#29B6F6" stroke-width="1.5"/>
+        <text x="85" y="105" text-anchor="middle" font-size="11" fill="#29B6F6" font-weight="700">2.1</text>
+        <text x="85" y="120" text-anchor="middle" font-size="10" fill="var(--tx)">Registrar Venta</text>
+        <rect x="170" y="80" width="110" height="60" rx="7" fill="rgba(41,182,246,.10)" stroke="#29B6F6" stroke-width="1.5"/>
+        <text x="225" y="105" text-anchor="middle" font-size="11" fill="#29B6F6" font-weight="700">2.2</text>
+        <text x="225" y="120" text-anchor="middle" font-size="10" fill="var(--tx)">Procesar Pago</text>
+        <rect x="310" y="80" width="110" height="60" rx="7" fill="rgba(41,182,246,.10)" stroke="#29B6F6" stroke-width="1.5"/>
+        <text x="365" y="105" text-anchor="middle" font-size="11" fill="#29B6F6" font-weight="700">2.3</text>
+        <text x="365" y="120" text-anchor="middle" font-size="10" fill="var(--tx)">Actualizar Stock</text>
+        <rect x="450" y="80" width="110" height="60" rx="7" fill="rgba(41,182,246,.10)" stroke="#29B6F6" stroke-width="1.5"/>
+        <text x="505" y="105" text-anchor="middle" font-size="11" fill="#29B6F6" font-weight="700">2.4</text>
+        <text x="505" y="120" text-anchor="middle" font-size="10" fill="var(--tx)">Generar Factura</text>
+        <line x1="140" y1="110" x2="170" y2="110" stroke="var(--mt)" stroke-width="1.5" marker-end="url(#arr3)"/>
+        <line x1="280" y1="110" x2="310" y2="110" stroke="var(--mt)" stroke-width="1.5" marker-end="url(#arr3)"/>
+        <line x1="420" y1="110" x2="450" y2="110" stroke="var(--mt)" stroke-width="1.5" marker-end="url(#arr3)"/>
+        <rect x="60" y="175" width="80" height="28" rx="3" fill="var(--bg-3)" stroke="var(--brd)" stroke-width="1"/>
+        <text x="100" y="193" text-anchor="middle" font-size="9" fill="var(--mt)">D4 Ventas</text>
+        <rect x="200" y="175" width="80" height="28" rx="3" fill="var(--bg-3)" stroke="var(--brd)" stroke-width="1"/>
+        <text x="240" y="193" text-anchor="middle" font-size="9" fill="var(--mt)">D5 Pagos</text>
+        <rect x="340" y="175" width="80" height="28" rx="3" fill="var(--bg-3)" stroke="var(--brd)" stroke-width="1"/>
+        <text x="380" y="193" text-anchor="middle" font-size="9" fill="var(--mt)">D3 Stock</text>
+        <rect x="470" y="175" width="90" height="28" rx="3" fill="var(--bg-3)" stroke="var(--brd)" stroke-width="1"/>
+        <text x="515" y="193" text-anchor="middle" font-size="9" fill="var(--mt)">D6 Facturas</text>
+        <line x1="85" y1="140" x2="100" y2="175" stroke="var(--brd)" stroke-width="1" stroke-dasharray="3 2"/>
+        <line x1="225" y1="140" x2="240" y2="175" stroke="var(--brd)" stroke-width="1" stroke-dasharray="3 2"/>
+        <line x1="365" y1="140" x2="380" y2="175" stroke="var(--brd)" stroke-width="1" stroke-dasharray="3 2"/>
+        <line x1="505" y1="140" x2="515" y2="175" stroke="var(--brd)" stroke-width="1" stroke-dasharray="3 2"/>
+        <rect x="0" y="90" width="25" height="40" rx="3" fill="var(--bg-4)" stroke="var(--brd)" stroke-width="1"/>
+        <text x="12" y="115" text-anchor="middle" font-size="8" fill="var(--mt)" transform="rotate(-90,12,110)">Cliente</text>
+        <rect x="575" y="90" width="25" height="40" rx="3" fill="var(--bg-4)" stroke="var(--brd)" stroke-width="1"/>
+        <text x="587" y="115" text-anchor="middle" font-size="8" fill="var(--mt)" transform="rotate(90,587,110)">Cajero</text>
+      </svg>
+      <div class="diag-label">Figura 3 — DFD Nivel 2 — Expansión Proceso 2.0 Gestión de Ventas</div>
+    </div>
+
+    <!-- DER -->
+    <div class="proy-h2" id="sec-der">DER — DIAGRAMA ENTIDAD RELACIÓN</div>
+    <p class="proy-p">Descripción de las 9 entidades principales y sus relaciones:</p>
+    <div class="grid-3c" id="derCards"></div>
+    <div class="proy-h3">Relaciones Principales</div>
+    <div style="overflow-x:auto;">
+    <table class="der-table">
+      <thead><tr><th>Entidad A</th><th>Relación</th><th>Entidad B</th><th>Cardinalidad</th><th>Descripción</th></tr></thead>
+      <tbody>
+        <tr><td style="color:var(--clight);font-weight:600;">roles</td><td style="color:var(--mt);font-style:italic;">tiene</td><td style="color:var(--mint);font-weight:600;">usuarios</td><td><span class="badge badge-info">1:N</span></td><td style="font-size:12px;">Un rol puede tener muchos usuarios</td></tr>
+        <tr><td style="color:var(--clight);font-weight:600;">usuarios</td><td style="color:var(--mt);font-style:italic;">tiene</td><td style="color:var(--mint);font-weight:600;">suscripciones</td><td><span class="badge badge-info">1:N</span></td><td style="font-size:12px;">Un cliente puede tener varias suscripciones</td></tr>
+        <tr><td style="color:var(--clight);font-weight:600;">planes</td><td style="color:var(--mt);font-style:italic;">incluye</td><td style="color:var(--mint);font-weight:600;">suscripciones</td><td><span class="badge badge-info">1:N</span></td><td style="font-size:12px;">Un plan puede estar en muchas suscripciones</td></tr>
+        <tr><td style="color:var(--clight);font-weight:600;">usuarios</td><td style="color:var(--mt);font-style:italic;">asigna</td><td style="color:var(--mint);font-weight:600;">rutinas</td><td><span class="badge badge-info">1:N</span></td><td style="font-size:12px;">Un entrenador puede asignar varias rutinas</td></tr>
+        <tr><td style="color:var(--clight);font-weight:600;">rutinas</td><td style="color:var(--mt);font-style:italic;">contiene</td><td style="color:var(--mint);font-weight:600;">rutina_ejercicios</td><td><span class="badge badge-info">1:N</span></td><td style="font-size:12px;">Una rutina tiene múltiples ejercicios</td></tr>
+        <tr><td style="color:var(--clight);font-weight:600;">usuarios</td><td style="color:var(--mt);font-style:italic;">crea</td><td style="color:var(--mint);font-weight:600;">planes_nutricionales</td><td><span class="badge badge-info">1:N</span></td><td style="font-size:12px;">Un nutricionista crea varios planes</td></tr>
+        <tr><td style="color:var(--clight);font-weight:600;">carritos</td><td style="color:var(--mt);font-style:italic;">contiene</td><td style="color:var(--mint);font-weight:600;">carrito_items</td><td><span class="badge badge-info">1:N</span></td><td style="font-size:12px;">Un carrito tiene varios productos</td></tr>
+        <tr><td style="color:var(--clight);font-weight:600;">ventas</td><td style="color:var(--mt);font-style:italic;">incluye</td><td style="color:var(--mint);font-weight:600;">venta_items</td><td><span class="badge badge-info">1:N</span></td><td style="font-size:12px;">Una venta tiene varios ítems</td></tr>
+        <tr><td style="color:var(--clight);font-weight:600;">productos</td><td style="color:var(--mt);font-style:italic;">aparece en</td><td style="color:var(--mint);font-weight:600;">venta_items</td><td><span class="badge badge-info">1:N</span></td><td style="font-size:12px;">Un producto puede estar en varias ventas</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== ORIENTADA A OBJETOS ==================== -->
+<section class="page" id="page-objetos">
+  <div class="page-shell">
+    <div class="page-header">
+      <div class="page-eyebrow">III. Análisis y Diseño</div>
+      <div class="page-title">Orientada a <span>Objetos</span></div>
+      <p class="page-desc">Diagrama de Clases UML, Casos de Uso del Sistema y de Negocio, Casos Expandidos, Diagrama de Procesos y Diagrama de Secuencia.</p>
+    </div>
+
+    <!-- DIAGRAMA DE CLASES -->
+    <div class="phase-badge objetos">Orientado a Objetos — UML</div>
+    <div class="proy-h2" id="sec-clases">DIAGRAMA DE CLASES</div>
+    <p class="proy-p">Jerarquía de clases del sistema GymPower con herencia y responsabilidades por rol:</p>
+    <div class="grid-3c">
+      <div class="uml-class"><div class="uml-class-name abstract">«abstracta» Usuario</div><div class="uml-section"><div class="uml-attr"><span>-</span> id: int</div><div class="uml-attr"><span>-</span> nombre: string</div><div class="uml-attr"><span>-</span> email: string</div><div class="uml-attr"><span>-</span> rol: Rol</div></div><div class="uml-section"><div class="uml-method">+ login(): bool</div><div class="uml-method">+ logout(): void</div><div class="uml-method">+ getPerfil(): array</div></div></div>
+      <div class="uml-class"><div class="uml-class-name">Administrador</div><div class="uml-section" style="font-size:10px;color:var(--mt);padding:5px 12px;font-style:italic;">extends Usuario</div><div class="uml-section"><div class="uml-method">+ gestionarUsuarios()</div><div class="uml-method">+ generarReportes()</div><div class="uml-method">+ verEstadísticas()</div><div class="uml-method">+ gestionarDiagramas()</div></div></div>
+      <div class="uml-class"><div class="uml-class-name">Cliente</div><div class="uml-section" style="font-size:10px;color:var(--mt);padding:5px 12px;font-style:italic;">extends Usuario</div><div class="uml-section"><div class="uml-attr"><span>-</span> suscripcion: Suscripcion</div><div class="uml-attr"><span>-</span> carrito: Carrito</div></div><div class="uml-section"><div class="uml-method">+ comprarPlan()</div><div class="uml-method">+ agregarAlCarrito()</div><div class="uml-method">+ verMiRutina()</div><div class="uml-method">+ verMiNutricion()</div></div></div>
+      <div class="uml-class"><div class="uml-class-name">Entrenador</div><div class="uml-section" style="font-size:10px;color:var(--mt);padding:5px 12px;font-style:italic;">extends Usuario</div><div class="uml-section"><div class="uml-method">+ asignarRutina()</div><div class="uml-method">+ verAlumnos()</div><div class="uml-method">+ crearEjercicio()</div></div></div>
+      <div class="uml-class"><div class="uml-class-name">AgenteCaja</div><div class="uml-section" style="font-size:10px;color:var(--mt);padding:5px 12px;font-style:italic;">extends Usuario</div><div class="uml-section"><div class="uml-method">+ registrarVenta()</div><div class="uml-method">+ registrarCliente()</div><div class="uml-method">+ venderPlan()</div><div class="uml-method">+ verHistorial()</div></div></div>
+      <div class="uml-class"><div class="uml-class-name">Database</div><div class="uml-section" style="font-size:10px;color:var(--mt);padding:5px 12px;font-style:italic;">«Singleton»</div><div class="uml-section"><div class="uml-attr"><span>-</span> instancia: self</div><div class="uml-attr"><span>-</span> pdo: PDO</div></div><div class="uml-section"><div class="uml-method">+ getInstance(): self</div><div class="uml-method">+ fetch(): array</div><div class="uml-method">+ insert(): int</div><div class="uml-method">+ execute(): bool</div></div></div>
+    </div>
+
+    <!-- CASOS DE USO DEL SISTEMA -->
+    <div class="proy-h2" id="sec-cusis">CASOS DE USO DEL SISTEMA</div>
+    <div class="actor-grid">
+      <div class="actor-card"><div class="actor-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--clight)" stroke-width="1.5"><circle cx="12" cy="8" r="5"/><path d="M3 21a9 9 0 0 1 18 0"/></svg></div><div class="actor-name">Administrador</div><div class="actor-role">Gestionar usuarios, planes, productos, stock, estadísticas, reportes, diagramas, permisos, suscripciones.</div></div>
+      <div class="actor-card"><div class="actor-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--clight)" stroke-width="1.5"><circle cx="12" cy="8" r="5"/><path d="M3 21a9 9 0 0 1 18 0"/></svg></div><div class="actor-name">Cliente</div><div class="actor-role">Login, tienda, carrito, compra, mi rutina, mi nutrición, mis compras, perfil.</div></div>
+      <div class="actor-card"><div class="actor-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--clight)" stroke-width="1.5"><circle cx="12" cy="8" r="5"/><path d="M3 21a9 9 0 0 1 18 0"/></svg></div><div class="actor-name">Entrenador</div><div class="actor-role">Ver alumnos, crear rutina, asignar rutina, ver perfil.</div></div>
+      <div class="actor-card"><div class="actor-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--clight)" stroke-width="1.5"><circle cx="12" cy="8" r="5"/><path d="M3 21a9 9 0 0 1 18 0"/></svg></div><div class="actor-name">Nutricionista</div><div class="actor-role">Ver alumnos, crear plan nutricional, asignar plan, ver perfil.</div></div>
+      <div class="actor-card"><div class="actor-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--clight)" stroke-width="1.5"><circle cx="12" cy="8" r="5"/><path d="M3 21a9 9 0 0 1 18 0"/></svg></div><div class="actor-name">Agente Caja</div><div class="actor-role">Nueva venta POS, registrar cliente, vender plan, historial, perfil.</div></div>
+      <div class="actor-card"><div class="actor-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--clight)" stroke-width="1.5"><circle cx="12" cy="8" r="5"/><path d="M3 21a9 9 0 0 1 18 0"/></svg></div><div class="actor-name">Limpieza</div><div class="actor-role">Ver tareas, completar tarea, ver stock, registrar acceso, perfil.</div></div>
+    </div>
+
+    <!-- CASOS DE USO DE NEGOCIO -->
+    <div class="proy-h2" id="sec-cuneg">CASOS DE USO DE NEGOCIO</div>
+    <p class="proy-p">Los 13 casos de uso de negocio desde la perspectiva organizacional del Centro Deportivo GymPower:</p>
+    <table class="uc-table">
+      <thead><tr><th>#</th><th>Caso de Uso</th><th>Actor</th><th>Descripción</th></tr></thead>
+      <tbody>
+        <tr><td>UCN-01</td><td>Gestionar Membresías</td><td>Administrador</td><td>Control de altas, bajas y renovaciones de membresías</td></tr>
+        <tr><td>UCN-02</td><td>Venta POS</td><td>Agente Caja</td><td>Proceso completo de venta en punto de servicio</td></tr>
+        <tr><td>UCN-03</td><td>Control de Inventario</td><td>Administrador</td><td>Gestión de stock y alertas de inventario mínimo</td></tr>
+        <tr><td>UCN-04</td><td>Planificación de Entrenamiento</td><td>Entrenador</td><td>Creación y asignación de rutinas personalizadas</td></tr>
+        <tr><td>UCN-05</td><td>Planes Nutricionales</td><td>Nutricionista</td><td>Elaboración y seguimiento de dietas individuales</td></tr>
+        <tr><td>UCN-06</td><td>Control de Acceso</td><td>Agente Caja</td><td>Registro de entradas y salidas del gimnasio</td></tr>
+        <tr><td>UCN-07</td><td>Facturación</td><td>Sistema</td><td>Generación automática de facturas numeradas</td></tr>
+        <tr><td>UCN-08</td><td>Tienda Online</td><td>Cliente</td><td>Compra de productos desde el portal web</td></tr>
+        <tr><td>UCN-09</td><td>Reportes Estadísticos</td><td>Administrador</td><td>Generación de informes en PDF por período</td></tr>
+        <tr><td>UCN-10</td><td>Gestión de Tareas</td><td>Administrador /Limpieza</td><td>Asignación y seguimiento de tareas de mantenimiento</td></tr>
+        <tr><td>UCN-11</td><td>Autenticación porRoles</td><td>Todos</td><td>Login seguro con redirección al panel del rol</td></tr>
+        <tr><td>UCN-12</td><td>Carrito de Compras</td><td>Cliente</td><td>Gestión de carrito persistente con checkout</td></tr>
+        <tr><td>UCN-13</td><td>Gestión de Diagramas</td><td>Administrador</td><td>Visualización y administración de diagramas UML/DFD</td></tr>
+      </tbody>
+    </table>
+
+    <!-- CASOS DE USO EXPANDIDOS -->
+    <div class="proy-h2" id="sec-cue">CASOS DE USO EXPANDIDOS</div>
+    <p class="proy-p">Dos de los 8 casos de uso expandidos más representativos del sistema:</p>
+
+    <div class="cue-card">
+      <div class="cue-header"><div class="card-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>CUE-01 — Login y Redirección por Rol</div>
+      <div class="cue-row"><div class="cue-label">Actor Principal</div><div class="cue-val">Cualquier usuario registrado</div></div>
+      <div class="cue-row"><div class="cue-label">Precondición</div><div class="cue-val">Usuario registrado en el sistema con rol asignado</div></div>
+      <div class="cue-row"><div class="cue-label">Flujo Principal</div><div class="cue-val">1. Usuario accede al formulario de login.<br>2. Ingresa email y contraseña.<br>3. Sistema valida credenciales contra la base de datos.<br>4. Sistema verifica el rol del usuario.<br>5. Sistema redirige al panel correspondiente al rol.<br>6. Sistema registra timestamp de último acceso.</div></div>
+      <div class="cue-row"><div class="cue-label">Alternativo</div><div class="cue-val">A1: Credenciales incorrectas → Mostrar error, máximo 5 intentos.</div></div>
+      <div class="cue-row"><div class="cue-label">Excepción</div><div class="cue-val">E1: Usuario inactivo → Mostrar mensaje de cuenta suspendida.</div></div>
+      <div class="cue-row"><div class="cue-label">Postcondición</div><div class="cue-val">Sesión activa, usuario en su panel correspondiente.</div></div>
+    </div>
+
+    <div class="cue-card">
+      <div class="cue-header"><div class="card-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>CUE-06 — Compra en Tienda Online</div>
+      <div class="cue-row"><div class="cue-label">Actor Principal</div><div class="cue-val">Cliente</div></div>
+      <div class="cue-row"><div class="cue-label">Precondición</div><div class="cue-val">Cliente autenticado con plan activo</div></div>
+      <div class="cue-row"><div class="cue-label">Flujo Principal</div><div class="cue-val">1.Cliente accede a la tienda.<br>2. Navega y filtra por categoría.<br>3. Ve detalle del producto.<br>4. Agrega al carrito.<br>5. Accede al carrito y revisa el resumen.<br>6. Selecciona método de pago.<br>7. Confirma la compra.<br>8. Sistema valida stock de cada ítem.<br>9. Sistema procesa el pago y genera factura.<br>10. Sistema actualiza el stock y vacía el carrito.</div></div>
+      <div class="cue-row"><div class="cue-label">Alternativo</div><div class="cue-val">A1: Producto sin stock → Botón deshabilitado.<br>A2: Carrito vacío → Redirige a la tienda.</div></div>
+      <div class="cue-row"><div class="cue-label">Excepción</div><div class="cue-val">E1: Error en el pago → Mostrar mensaje y mantener carrito.<br>E2: Stock cambió entre agregar y confirmar → Notificar.</div></div>
+      <div class="cue-row"><div class="cue-label">Postcondición</div><div class="cue-val">Compra realizada, carrito vaciado, stock reducido, factura disponible.</div></div>
+    </div>
+
+    <!-- DIAGRAMA DE PROCESOS -->
+    <div class="proy-h2" id="sec-swimlanes">DIAGRAMA DE PROCESOS</div>
+    <p class="proy-p">Los 5 procesos principales modelados con swimlanes:</p>
+    <div class="grid-2c">
+      <div class="info-card"><div class="info-card-title">Proceso 1: Autenticación</div><p class="proy-p" style="margin:0;font-size:13px;">Cliente → Ingresa credenciales → Sistema valida → Redirige al dashboard del rol.</p></div>
+      <div class="info-card"><div class="info-card-title">Proceso 2: Venta POS</div><p class="proy-p" style="margin:0;font-size:13px;">Cajero → Busca cliente → Selecciona ítems → Método de pago → Sistema genera factura.</p></div>
+      <div class="info-card"><div class="info-card-title">Proceso 3: Asignación Rutina</div><p class="proy-p" style="margin:0;font-size:13px;">Entrenador → Selecciona alumno → Crea rutina → Agrega ejercicios → Asigna al cliente.</p></div>
+      <div class="info-card"><div class="info-card-title">Proceso 4: Tienda Online</div><p class="proy-p" style="margin:0;font-size:13px;">Cliente → Navega → Carrito → Checkout → Pago → Factura → Stock actualizado.</p></div>
+      <div class="info-card" style="grid-column:1/-1;"><div class="info-card-title">Proceso 5: TareasLimpieza</div><p class="proy-p" style="margin:0;font-size:13px;">Admin → Crea tarea → Asigna →Limpieza ejecuta → Marca completada → Sistema registra.</p></div>
+    </div>
+
+    <!-- DIAGRAMA DE SECUENCIA -->
+    <div class="proy-h2" id="sec-secuencia">DIAGRAMA DE SECUENCIA</div>
+    <p class="proy-p">Secuencia de autenticación — interacción entre el navegador, PHP y la base de datos:</p>
+    <div class="diagram-embed" style="min-height:320px;">
+      <svg viewBox="0 0 700 300" style="width:100%;max-width:700px;font-family:Rajdhani,sans-serif;font-size:11px;">
+        <defs><marker id="arrSeq" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><polygon points="0,0 10,5 0,10" fill="var(--mt)"/></marker></defs>
+        <rect x="15" y="10" width="90" height="30" rx="5" fill="var(--bg-3)" stroke="var(--brd)" stroke-width="1.5"/>
+        <text x="60" y="28" text-anchor="middle" fill="var(--tx)" font-weight="700" font-size="11">Usuario</text>
+        <line x1="60" y1="40" x2="60" y2="290" stroke="var(--brd)" stroke-width="1" stroke-dasharray="4 3"/>
+        <rect x="145" y="10" width="90" height="30" rx="5" fill="var(--bg-3)" stroke="var(--brd)" stroke-width="1.5"/>
+        <text x="190" y="28" text-anchor="middle" fill="var(--tx)" font-weight="700" font-size="11">Navegador</text>
+        <line x1="190" y1="40" x2="190" y2="290" stroke="var(--brd)" stroke-width="1" stroke-dasharray="4 3"/>
+        <rect x="295" y="10" width="110" height="30" rx="5" fill="var(--bg-3)" stroke="var(--brd)" stroke-width="1.5"/>
+        <text x="350" y="28" text-anchor="middle" fill="var(--tx)" font-weight="700" font-size="11">PHP auth.php</text>
+        <line x1="350" y1="40" x2="350" y2="290" stroke="var(--brd)" stroke-width="1" stroke-dasharray="4 3"/>
+        <rect x="485" y="10" width="110" height="30" rx="5" fill="var(--bg-3)" stroke="var(--brd)" stroke-width="1.5"/>
+        <text x="540" y="28" text-anchor="middle" fill="var(--tx)" font-weight="700" font-size="11">Base de Datos</text>
+        <line x1="540" y1="40" x2="540" y2="290" stroke="var(--brd)" stroke-width="1" stroke-dasharray="4 3"/>
+        <!-- Messages -->
+        <line x1="60" y1="60" x2="190" y2="60" stroke="#29B6F6" stroke-width="1.5" marker-end="url(#arrSeq)"/>
+        <text x="125" y="56" text-anchor="middle" fill="#29B6F6" font-size="9">POST email + password</text>
+        <line x1="190" y1="90" x2="350" y2="90" stroke="#29B6F6" stroke-width="1.5" marker-end="url(#arrSeq)"/>
+        <text x="270" y="86" text-anchor="middle" fill="#29B6F6" font-size="9">validateCredentials()</text>
+        <line x1="350" y1="120" x2="540" y2="120" stroke="#26C6A3" stroke-width="1.5" marker-end="url(#arrSeq)"/>
+        <text x="445" y="116" text-anchor="middle" fill="#26C6A3" font-size="9">SELECT usuario WHERE email=?</text>
+        <line x1="540" y1="150" x2="350" y2="150" stroke="#4DD9BC" stroke-width="1.5" marker-end="url(#arrSeq)"/>
+        <text x="445" y="146" text-anchor="middle" fill="#4DD9BC" font-size="9">Usuario encontrado</text>
+        <line x1="350" y1="175" x2="350" y2="175" stroke="#F59E0B" stroke-width="3"/>
+        <text x="370" y="172" fill="#F59E0B" font-size="9">password_verify()</text>
+        <line x1="350" y1="200" x2="540" y2="200" stroke="#26C6A3" stroke-width="1.5" marker-end="url(#arrSeq)"/>
+        <text x="445" y="196" text-anchor="middle" fill="#26C6A3" font-size="9">UPDATE ultimo_acceso</text>
+        <line x1="350" y1="225" x2="190" y2="225" stroke="#4DD9BC" stroke-width="1.5" marker-end="url(#arrSeq)"/>
+        <text x="270" y="221" text-anchor="middle" fill="#4DD9BC" font-size="9">Redirect → dashboard</text>
+        <line x1="190" y1="255" x2="60" y2="255" stroke="#4DD9BC" stroke-width="1.5" marker-end="url(#arrSeq)"/>
+        <text x="125" y="251" text-anchor="middle" fill="#4DD9BC" font-size="9">Panel del rol mostrado</text>
+        <!-- Activation boxes -->
+        <rect x="343" y="88" width="14" height="170" fill="rgba(41,182,246,.20)" stroke="#29B6F6" stroke-width="1"/>
+        <rect x="533" y="118" width="14" height="55" fill="rgba(38,198,163,.18)" stroke="#26C6A3" stroke-width="1"/>
+      </svg>
+      <div class="diag-label">Figura 4 — Diagrama de Secuencia — Proceso de Login GymPower</div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== VIDEOS ==================== -->
+<section class="page" id="page-videos">
+  <div class="page-shell">
+    <div class="page-header">
+      <div class="page-eyebrow">Material Audiovisual</div>
+      <div class="page-title">Videos del <span>Proyecto</span></div>
+      <p class="page-desc">Demostraciones, presentaciones académicas y explicaciones del sistema GymPower Bolivia.</p>
+    </div>
+    <div class="grid-2c">
+      <div class="video-card">
+        <div class="video-thumb">
+          <video src="assets/Draw.mp4" controls preload="metadata" style="position:absolute;inset:0;width:100%;height:100%;background:#000;"></video>
+        </div>
+        <div class="video-meta"><div class="video-title">Draw — Diagramas del Proyecto</div><div class="video-desc">Elaboración de los diagramas UML, DFD y entidad-relación del sistema GymPower.</div></div>
+      </div>
+      <div class="video-card">
+        <div class="video-thumb">
+          <video src="assets/login y carrito.mp4" controls preload="metadata" style="position:absolute;inset:0;width:100%;height:100%;background:#000;"></video>
+        </div>
+        <div class="video-meta"><div class="video-title">Login y Carrito</div><div class="video-desc">Proceso de autenticación de usuarios y flujo completo del carrito de compras en la tienda online.</div></div>
+      </div>
+      <div class="video-card">
+        <div class="video-thumb">
+          <video src="assets/pagina de empresa.mp4" controls preload="metadata" style="position:absolute;inset:0;width:100%;height:100%;background:#000;"></video>
+        </div>
+        <div class="video-meta"><div class="video-title">Pagina de Empresa</div><div class="video-desc">Recorrido por la pagina principal del sistema GymPower Bolivia y sus modulos de presentacion.</div></div>
+      </div>
+      <div class="video-card">
+        <div class="video-thumb">
+          <video src="assets/analisis.mp4" controls preload="metadata" style="position:absolute;inset:0;width:100%;height:100%;background:#000;"></video>
+        </div>
+        <div class="video-meta"><div class="video-title">Analisis del Sistema</div><div class="video-desc">Explicacion del analisis estructurado y orientado a objetos aplicado al proyecto GymPower.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== CONTACTO ==================== -->
+<section class="page" id="page-contacto">
+  <div class="page-shell">
+    <div class="page-header">
+      <div class="page-eyebrow">Equipo de Desarrollo</div>
+      <div class="page-title">Con<span>tacto</span></div>
+      <p class="page-desc">Información del equipo de desarrollo del sistema GymPower — Gestión 2026.</p>
+    </div>
+    <div class="grid-2c">
+      <div class="info-card">
+        <div class="info-card-title"><div class="card-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>EQUIPO DE DESARROLLO</div>
+        <div class="member-row"><div style="font-size:22px;"></div><div><div class="member-name">Marcelo — Líder de Proyecto</div><div class="member-phone">+591 69800542</div><div class="member-email">chelitolobitocerrillo@gmail.com</div></div></div>
+        <div class="member-row"><div style="font-size:22px;"></div><div><div class="member-name">Jesús — Backend Developer</div><div class="member-phone">+591 69800542</div><div class="member-email">chelitolobitocerrillo@gmail.com</div></div></div>
+        <div class="member-row"><div style="font-size:22px;"></div><div><div class="member-name">Villalobos — Frontend / UX</div><div class="member-phone">+591 69800542</div><div class="member-email">chelitolobitocerrillo@gmail.com</div></div></div>
+        <div class="member-row"><div style="font-size:22px;"></div><div><div class="member-name">Cerrillo — Documentación</div><div class="member-phone">+591 69800542</div><div class="member-email">chelitolobitocerrillo@gmail.com</div></div></div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title"><div class="card-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>INFORMACIÓN DE CONTACTO</div>
+        <div class="contact-info-row"><div class="contact-icon"></div><div><div class="contact-label">Teléfono</div><div class="contact-val">+591 69800542</div></div></div>
+        <div class="contact-info-row"><div class="contact-icon"></div><div><div class="contact-label">Email</div><div class="contact-val">chelitolobitocerrillo@gmail.com</div></div></div>
+        <div class="contact-info-row"><div class="contact-icon"></div><div><div class="contact-label">Ubicación</div><div class="contact-val">La Paz, Departamento de La Paz, Bolivia</div></div></div>
+        <div class="contact-info-row"><div class="contact-icon"></div><div><div class="contact-label">Sistema</div><div class="contact-val">GymPower Bolivia — Gestión 2026</div></div></div>
+        <div class="contact-info-row"><div class="contact-icon"></div><div><div class="contact-label">Materia</div><div class="contact-val">Análisis y Diseño de Sistemas</div></div></div>
+        <div style="margin-top:20px;">
+          <a href="http://gympower.kesug.com/" target="_blank" rel="noopener" class="btn-primary" style="text-decoration:none;display:inline-flex;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            Visitar gympower.kesug.com
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ==================== FOOTER ==================== -->
+<footer>
+  <div class="footer-inner">
+    <div>
+      <div class="footer-brand">
+        <div class="footer-logo-mark">GP</div>
+        <div>
+          <div class="footer-brand-text">GymPower</div>
+          <div class="footer-brand-sub">Análisis y Diseño de Sistemas</div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-center">
+      <div class="footer-copy">
+        <strong>Universidad Boliviana — Ingeniería de Sistemas</strong><br>
+        La Paz, Bolivia · Gestión 2026<br>
+       Marcelo ·Jesús ·Villalobos ·Cerrillo
+      </div>
+    </div>
+    <div class="footer-right">
+      <div class="footer-links">
+        <span class="footer-link" onclick="goPage('inicio')">Inicio</span>
+        <span class="footer-link" onclick="goPage('marco')">Marco</span>
+        <span class="footer-link" onclick="goPage('contacto')">Contacto</span>
+        <a href="http://gympower.kesug.com/" target="_blank" rel="noopener" class="footer-link">Sistema</a>
+      </div>
+      <div class="footer-accent"></div>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ============================================================
+// NAVIGATION
+// ============================================================
+function goPage(page, sectionId) {
+  const alreadyActive = document.getElementById('page-' + page)?.classList.contains('active');
+
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+  const el = document.getElementById('page-' + page);
+  if (el) el.classList.add('active');
+  const btn = document.getElementById('nav-' + page);
+  if (btn) btn.classList.add('active');
+  document.getElementById('mobileNav').classList.remove('open');
+
+  if (sectionId) {
+    // Si la página ya estaba activa, scroll directo; si no, esperar el render
+    const delay = alreadyActive ? 0 : 80;
+    setTimeout(() => scrollToSection(sectionId), delay);
+  } else {
+    window.scrollTo({top: 0, behavior: 'smooth'});
+  }
+}
+
+function scrollToSection(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const navH = document.querySelector('.navbar')?.offsetHeight || 64;
+  const top = el.getBoundingClientRect().top + window.pageYOffset - navH - 16;
+  window.scrollTo({top: top, behavior: 'smooth'});
+}
+
+function toggleMobile() {
+  document.getElementById('mobileNav').classList.toggle('open');
+}
+
+// ============================================================
+// THEME
+// ============================================================
+function toggleTheme() {
+  const html = document.documentElement;
+  const current = html.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  localStorage.setItem('gp-theme', next);
+  updateThemeIcon(next);
+}
+function updateThemeIcon(theme) {
+  const icon = document.getElementById('themeIcon');
+  if (theme === 'light') {
+    icon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+  } else {
+    icon.innerHTML = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+  }
+}
+// Load saved theme
+(function(){
+  const saved = localStorage.getItem('gp-theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', saved);
+  updateThemeIcon(saved);
+})();
+
+// ============================================================
+// GANTT DATA
+// ============================================================
+const ganttData = [
+  ['I','Relevamiento de información','Todos',[1,1,0,0,0,0,0,0,0,0,0,0]],
+  ['I','Marco teórico y antecedentes','Todos',[1,1,1,0,0,0,0,0,0,0,0,0]],
+  ['I','Planteamiento del problema','Grupo',[0,1,1,0,0,0,0,0,0,0,0,0]],
+  ['I','Objetivos y metodología','Grupo',[0,0,1,1,0,0,0,0,0,0,0,0]],
+  ['I','Planificación Gantt','Todos',[0,0,1,1,0,0,0,0,0,0,0,0]],
+  ['II','Modelo Ambiental (DFD N0)','Ing. S1',[0,0,0,1,1,0,0,0,0,0,0,0]],
+  ['II','DFD Nivel 1 y Nivel 2','Ing. S2',[0,0,0,0,1,1,0,0,0,0,0,0]],
+  ['II','DER — Entidad Relación','Ing. S3',[0,0,0,0,1,1,0,0,0,0,0,0]],
+  ['II','Diccionario de datos','Todos',[0,0,0,0,0,1,1,0,0,0,0,0]],
+  ['III','Diagrama de Clases UML','Ing. S1',[0,0,0,0,0,0,1,1,0,0,0,0]],
+  ['III','Casos de Uso del Sistema','Ing. S2',[0,0,0,0,0,0,1,1,0,0,0,0]],
+  ['III','Casos de Uso de Negocio','Ing. S3',[0,0,0,0,0,0,0,1,1,0,0,0]],
+  ['III','Casos de Uso Expandidos','Todos',[0,0,0,0,0,0,0,0,1,1,0,0]],
+  ['III','Diagrama de Secuencia','Ing. S4',[0,0,0,0,0,0,0,0,1,1,0,0]],
+  ['III','Implementación PHP/MySQL','Todos',[0,0,0,0,0,1,1,1,1,1,1,0]],
+  ['III','Pruebas e integración','Todos',[0,0,0,0,0,0,0,0,0,1,1,0]],
+  ['III','Documentación final','Todos',[0,0,0,0,0,0,0,0,0,0,1,1]],
+  ['III','Presentación del proyecto','Todos',[0,0,0,0,0,0,0,0,0,0,0,1]],
+];
+const badgeClass = {I:'badge-warning',II:'badge-info',III:'badge-success'};
+const ganttBody = document.getElementById('ganttBody');
+if (ganttBody) {
+  ganttBody.innerHTML = ganttData.map(([fase,act,resp,weeks]) =>
+    `<tr>
+      <td><span class="badge ${badgeClass[fase]}">${fase}</span></td>
+      <td style="white-space:nowrap;">${act}</td>
+      <td style="font-size:11px;color:var(--mt);">${resp}</td>
+      ${weeks.map(v => `<td class="gantt-cell${v?' done':' x'}">${v?'●':''}</td>`).join('')}
+    </tr>`
+  ).join('');
+}
+
+// ============================================================
+// DER CARDS
+// ============================================================
+const derData = [
+  ['roles','id, nombre, descripción','Catálogo de los 6 roles del sistema'],
+  ['usuarios','id, rol_id, nombre, email, password, teléfono, activo','Todos los usuarios del sistema por rol'],
+  ['planes','id, categoría_id, nombre, precio, duración_días','Planes de membresía disponibles'],
+  ['suscripciones','id, cliente_id, plan_id, fecha_inicio, fecha_fin, estado','Membresías activas y vencidas'],
+  ['productos','id, categoría_id, nombre, precio, stock, imagen','Catálogo de la tienda online'],
+  ['ventas','id, numero_factura, cliente_id, cajero_id, total, estado','Transacciones del sistema'],
+  ['rutinas','id, entrenador_id, cliente_id, nombre, activo','Planes de entrenamiento'],
+  ['planes_nutricionales','id, nutricionista_id, cliente_id, calorías_día, macros','Dietas personalizadas'],
+  ['tareas','id, título, asignado_a, prioridad, estado','Tareas de limpieza y mantenimiento'],
+];
+const derContainer = document.getElementById('derCards');
+if (derContainer) {
+  derContainer.innerHTML = derData.map(([name,attrs,desc]) =>
+    `<div class="info-card" style="padding:14px;">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;color:var(--clight);margin-bottom:6px;border-bottom:1px solid var(--brd);padding-bottom:5px;">${name}</div>
+      <div style="font-size:10px;font-family:'Rajdhani',sans-serif;color:var(--mt);margin-bottom:6px;line-height:1.6;">${attrs}</div>
+      <div style="font-size:11px;color:var(--tx);">${desc}</div>
+    </div>`
+  ).join('');
+}
+</script>
+</body>
+</html>
